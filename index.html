@@ -2,10 +2,211 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<title>SAC Piedras Negras / Monclova</title>
+<title>RR — SAC Piedras Negras / Monclova</title>
+<style>
+  :root{
+    --navy:#001F5B;
+    --green:#8DC63F;
+    --red:#E8003D;
+    --blue:#00AEEF;
+    --yellow:#F5A623;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:Segoe UI, Arial, sans-serif;
+    background:#f4f6fa;
+    margin:0;
+    padding:20px;
+    color:#1a1a1a;
+  }
+  .banner{
+    background:linear-gradient(135deg,var(--navy),#003a8c);
+    color:#fff;
+    padding:12px 18px;
+    border-radius:12px;
+    margin-bottom:14px;
+    font-weight:700;
+    font-size:14px;
+  }
+  .banner span{font-weight:400;font-size:11.5px;opacity:0.8;display:block;margin-top:2px;}
+
+  .cards{
+    display:flex;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .kpi{
+    flex:1;
+    background:#fff;
+    border-radius:12px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    padding:10px 14px;
+    border-top:4px solid var(--navy);
+    position:relative;
+  }
+  .kpi.morado{border-top-color:#8B5CF6;}
+  .kpi .label{font-size:10.5px;color:#666;font-weight:600;text-transform:uppercase;}
+  .kpi .value{font-size:24px;font-weight:800;color:var(--navy);margin:2px 0;}
+  .kpi .sub{font-size:11px;color:#555;}
+  .kpi .icon{position:absolute;top:8px;right:10px;font-size:16px;opacity:.5;}
+
+  .mini-cols{
+    display:flex;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .mini{
+    flex:1;
+    background:#fff;
+    border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    overflow:hidden;
+  }
+  .mini-head{
+    padding:6px 12px;
+    font-size:11px;
+    font-weight:700;
+    color:#fff;
+    background:var(--navy);
+  }
+  .mini-head.red{background:var(--red);}
+  .mini table{width:100%;border-collapse:collapse;font-size:11px;}
+  .mini td{padding:4px 12px;border-bottom:1px solid #eef1f6;}
+  .mini td:last-child{text-align:right;font-weight:700;color:var(--navy);}
+  .mini tr:last-child td{border-bottom:none;}
+  .mini tr.otros td{font-style:italic;color:#777;}
+
+  .estado{padding:40px;text-align:center;color:#666;font-size:13px;}
+</style>
 </head>
-<body style="font-family:Segoe UI, Arial, sans-serif; background:#f4f6fa; margin:0; padding:60px; text-align:center; color:#001F5B;">
-  <h1>Página en construcción</h1>
-  <p>Este dashboard todavía no está listo para compartirse.</p>
+<body>
+
+<div id="app">
+  <div class="estado">Cargando datos…</div>
+</div>
+
+<script>
+const SPREADSHEET_ID = '14RyDdcd_GTBPGNMCiZIhtFmhs8ZuQ_jsppuOJLQzLfI';
+const API_KEY = 'AIzaSyASHf7J097a_nD6sSJxZHo7kiDn_edntuc';
+
+const RANGES = [
+  'KPIs!A2:H1000',
+  "'Por Cluster'!A2:C1000",
+  "'Por Falla'!A2:C1000",
+  "'Top Descripcion'!A2:C1000",
+  "'Distribucion Repetido60'!A2:C1000",
+  "'Top Cuentas'!A2:D1000"
+];
+
+function esc(s){
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function filaTabla(cols, ultima, esOtros){
+  const clase = esOtros ? ' class="otros"' : '';
+  return `<tr${clase}>${cols.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`;
+}
+
+async function cargar(){
+  const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + SPREADSHEET_ID +
+    '/values:batchGet?' + RANGES.map(r => 'ranges=' + encodeURIComponent(r)).join('&') +
+    '&key=' + API_KEY;
+
+  const resp = await fetch(url);
+  if(!resp.ok){
+    throw new Error('No se pudo cargar la información (HTTP ' + resp.status + ')');
+  }
+  const data = await resp.json();
+  const [kpisRaw, clusterRaw, fallaRaw, descRaw, distRaw, cuentasRaw] =
+    data.valueRanges.map(r => r.values || []);
+
+  if(kpisRaw.length === 0){
+    document.getElementById('app').innerHTML = '<div class="estado">Todavía no hay datos cargados.</div>';
+    return;
+  }
+
+  // Última semana disponible (última fila de KPIs)
+  const [semana, rango, totalCuentas, cuentas4mas, pct4mas, maxRep, cuentaMax, clusterMax] =
+    kpisRaw[kpisRaw.length - 1];
+
+  const porSemana = (filas) => filas.filter(f => String(f[0]) === String(semana));
+
+  const cluster = porSemana(clusterRaw);
+  const falla = porSemana(fallaRaw);
+  const desc = porSemana(descRaw);
+  const dist = porSemana(distRaw);
+  const cuentas = porSemana(cuentasRaw);
+
+  const pctTexto = (parseFloat(pct4mas) * 100).toFixed(1) + '%';
+
+  const html = `
+    <div class="banner">
+      🔁 RR (REPEAT REPORT) — PIEDRAS NEGRAS / MONCLOVA
+      <span>Semana ${esc(rango)} (Sem ${esc(semana)}) · Pestaña "RepeatReportS" · Repetido60 = visitas repetidas en 60 días</span>
+    </div>
+
+    <div class="cards">
+      <div class="kpi morado">
+        <div class="icon">🔁</div>
+        <div class="label">Total Cuentas</div>
+        <div class="value">${esc(totalCuentas)}</div>
+        <div class="sub">Repeat Report Sem ${esc(semana)}</div>
+      </div>
+      <div class="kpi" style="border-top-color:var(--yellow);">
+        <div class="icon">⚠️</div>
+        <div class="label">Cuentas con 4+ Repeticiones</div>
+        <div class="value">${esc(cuentas4mas)}</div>
+        <div class="sub">${pctTexto} del total</div>
+      </div>
+      <div class="kpi" style="border-top-color:var(--red);">
+        <div class="icon">🚨</div>
+        <div class="label">Máximo Repeticiones</div>
+        <div class="value">${esc(maxRep)}</div>
+        <div class="sub">Cuenta ${esc(cuentaMax)} (${esc(clusterMax)})</div>
+      </div>
+    </div>
+
+    <div class="mini-cols">
+      <div class="mini">
+        <div class="mini-head">📍 POR CLUSTER</div>
+        <table>${cluster.map(f => filaTabla([f[1], f[2]])).join('')}</table>
+      </div>
+      <div class="mini">
+        <div class="mini-head">🛠️ POR FALLA</div>
+        <table>${falla.map(f => filaTabla([f[1], f[2]], false, String(f[1]).startsWith('Otros'))).join('')}</table>
+      </div>
+    </div>
+
+    <div class="mini-cols">
+      <div class="mini">
+        <div class="mini-head">📝 TOP DESCRIPCIÓN UNIFICADA</div>
+        <table>${desc.map(f => filaTabla([f[1], f[2]], false, String(f[1]).startsWith('Otros'))).join('')}</table>
+      </div>
+      <div class="mini">
+        <div class="mini-head red">🔁 DISTRIBUCIÓN REPETIDO60</div>
+        <table>${dist.map(f => filaTabla([f[1] + ' repeticiones', f[2] + ' cuenta' + (f[2] == 1 ? '' : 's')])).join('')}</table>
+      </div>
+    </div>
+
+    <div class="mini-cols">
+      <div class="mini">
+        <div class="mini-head red">🔥 TOP CUENTAS CON MÁS REPETICIONES</div>
+        <table>${cuentas.map(f => {
+          const esOtros = !f[2] && !f[3];
+          return filaTabla([f[1], esOtros ? '—' : f[3]]);
+        }).join('')}</table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('app').innerHTML = html;
+}
+
+cargar().catch(err => {
+  document.getElementById('app').innerHTML =
+    '<div class="estado">No se pudo cargar el dashboard.<br>' + esc(err.message) + '</div>';
+});
+</script>
+
 </body>
 </html>
