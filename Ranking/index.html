@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Ranking Suspendidos — SAC Piedras Negras / Monclova</title>
+<style>
+  :root{
+    --navy:#001F5B;
+    --green:#8DC63F;
+    --red:#E8003D;
+    --blue:#00AEEF;
+    --yellow:#F5A623;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:Segoe UI, Arial, sans-serif;
+    background:#f4f6fa;
+    margin:0;
+    padding:20px;
+    color:#1a1a1a;
+  }
+  .banner{
+    background:linear-gradient(135deg,var(--navy),#003a8c);
+    color:#fff;
+    padding:12px 18px;
+    border-radius:12px;
+    margin-bottom:14px;
+    font-weight:700;
+    font-size:14px;
+  }
+  .banner span{font-weight:400;font-size:11.5px;opacity:0.8;display:block;margin-top:2px;}
+
+  .cards{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px;}
+  .kpi{flex:1 1 180px;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:10px 14px;border-top:4px solid var(--navy);position:relative;}
+  .kpi.verde{border-top-color:var(--green);}
+  .kpi.rojo{border-top-color:var(--red);}
+  .kpi.azul{border-top-color:var(--blue);}
+  .kpi .label{font-size:10.5px;color:#666;font-weight:600;text-transform:uppercase;}
+  .kpi .value{font-size:22px;font-weight:800;color:var(--navy);margin:2px 0;}
+  .kpi .sub{font-size:11px;color:#555;}
+  .kpi .icon{position:absolute;top:8px;right:10px;font-size:16px;opacity:.5;}
+
+  .section{background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden;margin-bottom:14px;}
+  .sec-head{padding:8px 14px;font-size:11.5px;font-weight:700;color:#fff;background:var(--navy);}
+  .sec-head.red{background:var(--red);}
+  .sec-head.green{background:var(--green);color:#0d2b00;}
+  .sec-body{padding:10px 14px;overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:11.5px;}
+  th{text-align:left;padding:6px 8px;border-bottom:2px solid #e2e8f0;color:#666;font-size:10px;text-transform:uppercase;}
+  td{padding:5px 8px;border-bottom:1px solid #eef1f6;}
+  .num{text-align:right;font-variant-numeric:tabular-nums;}
+  .up{color:var(--red);font-weight:700;}
+  .down{color:#2f8f2f;font-weight:700;}
+  .flat{color:#888;}
+  .sindato{color:#aaa;font-style:italic;}
+  .own{background:#fff3b0;font-weight:700;}
+
+  .estado{padding:40px;text-align:center;color:#666;font-size:13px;}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="estado">Cargando datos…</div>
+</div>
+
+<script>
+const SPREADSHEET_ID = '1b-AUtoIO1eeCyXbeauZU8-E6tVJjQMxiF0FmWIz9lUg';
+const API_KEY = 'AIzaSyASHf7J097a_nD6sSJxZHo7kiDn_edntuc';
+const RANGE = "'Untitled'!A2:E5000";
+
+const PLAZAS_HABITUALES = [
+  "Los Mochis", "Ciudad Obregon / Navojoa", "Mexicali", "La Laguna",
+  "Ciudad Juarez", "Coatza / Mina", "Nuevo Laredo", "Tijuana", "Tepic",
+  "Mazatlan", "Tampico", "Cancun", "Tuxtla", "Piedras Negras / Monclova",
+  "Chihuahua", "Culiacan", "Ciudad Victoria", "Matamoros", "Villahermosa",
+  "Reynosa", "Saltillo", "Leon", "Hermosillo", "Poza Rica",
+];
+const ACENTOS_PLAZA = {"Leon":"León"};
+function prettyPlaza(n){ return ACENTOS_PLAZA[n] || n; }
+function esc(s){ return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function filaPlazaSemana(hist, plaza, semana){
+  return hist.find(r => r.plaza === plaza && r.semana === semana) || null;
+}
+function lugarEnSemana(hist, plaza, semana){
+  const filas = hist.filter(r => r.semana === semana && PLAZAS_HABITUALES.includes(r.plaza))
+    .sort((a,b) => b.pct - a.pct);
+  const idx = filas.findIndex(r => r.plaza === plaza);
+  return idx === -1 ? null : idx + 1;
+}
+
+async function cargar(){
+  const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + SPREADSHEET_ID +
+    '/values/' + encodeURIComponent(RANGE) + '?key=' + API_KEY;
+  const resp = await fetch(url);
+  if(!resp.ok) throw new Error('No se pudo cargar la información (HTTP ' + resp.status + ')');
+  const data = await resp.json();
+  const rows = data.values || [];
+  if(rows.length === 0){
+    document.getElementById('app').innerHTML = '<div class="estado">Todavía no hay datos cargados.</div>';
+    return;
+  }
+
+  const hist = rows.map(r => ({
+    semana: parseInt(r[0], 10),
+    plaza: r[1],
+    base: parseInt(r[2], 10),
+    susp: parseInt(r[3], 10),
+    pct: parseFloat(r[4]),
+  }));
+
+  const semanas = [...new Set(hist.map(r => r.semana))].sort((a,b) => a-b);
+  const semActual = semanas[semanas.length - 1];
+  const semAnterior = semanas[semanas.length - 2];
+
+  // KPIs
+  const filasActual = PLAZAS_HABITUALES.map(p => filaPlazaSemana(hist, p, semActual)).filter(Boolean);
+  const promedio = filasActual.length ? filasActual.reduce((a,r) => a + r.pct, 0) / filasActual.length : 0;
+  const mejor = filasActual.length ? filasActual.reduce((a,b) => a.pct < b.pct ? a : b) : null;
+  const peor = filasActual.length ? filasActual.reduce((a,b) => a.pct > b.pct ? a : b) : null;
+
+  // Comparativa
+  const comparativa = PLAZAS_HABITUALES.map(plaza => {
+    const actual = filaPlazaSemana(hist, plaza, semActual);
+    const anterior = filaPlazaSemana(hist, plaza, semAnterior);
+    const lugarActual = actual ? lugarEnSemana(hist, plaza, semActual) : null;
+    const lugarAnterior = anterior ? lugarEnSemana(hist, plaza, semAnterior) : null;
+    return {plaza, actual, anterior, lugarActual, lugarAnterior};
+  }).sort((a,b) => {
+    if(a.lugarActual === null) return 1;
+    if(b.lugarActual === null) return -1;
+    return a.lugarActual - b.lugarActual;
+  });
+
+  const filasComparativaHtml = comparativa.map(f => {
+    if(!f.actual){
+      return `<tr><td>—</td><td>${esc(prettyPlaza(f.plaza))}</td><td class="num sindato">sin dato</td><td class="num sindato">sin dato</td><td class="num">—</td><td class="num">—</td></tr>`;
+    }
+    const own = f.plaza === 'Piedras Negras / Monclova' ? ' class="own"' : '';
+    const pctAnt = f.anterior ? f.anterior.pct.toFixed(2) + '%' : '<span class="sindato">sin dato</span>';
+    let dPtsHtml = '—';
+    if(f.anterior){
+      const d = f.actual.pct - f.anterior.pct;
+      dPtsHtml = `<span class="${d>0?'up':(d<0?'down':'flat')}">${d>0?'▲':(d<0?'▼':'—')} ${Math.abs(d).toFixed(2)}</span>`;
+    }
+    let dLugarHtml = '—';
+    if(f.lugarAnterior !== null){
+      const dL = f.lugarActual - f.lugarAnterior; // positivo = subio numero = bueno
+      dLugarHtml = dL === 0 ? '<span class="flat">— 0</span>' : (dL > 0 ? `<span class="down">▼ +${dL}</span>` : `<span class="up">▲ ${dL}</span>`);
+    }
+    return `<tr${own}><td>#${f.lugarActual}</td><td>${esc(prettyPlaza(f.plaza))}</td><td class="num">${pctAnt}</td><td class="num">${f.actual.pct.toFixed(2)}%</td><td class="num">${dPtsHtml}</td><td class="num">${dLugarHtml}</td></tr>`;
+  }).join('');
+
+  // Mejoraron / Empeoraron
+  const movimientos = PLAZAS_HABITUALES.map(plaza => {
+    const a = filaPlazaSemana(hist, plaza, semActual);
+    const b = filaPlazaSemana(hist, plaza, semAnterior);
+    if(!a || !b) return null;
+    return {plaza, anterior: b.pct, actual: a.pct, delta: a.pct - b.pct};
+  }).filter(Boolean);
+  const mejoraron = movimientos.filter(m => m.delta < 0).sort((a,b) => a.delta - b.delta).slice(0,8);
+  const empeoraron = movimientos.filter(m => m.delta > 0).sort((a,b) => b.delta - a.delta).slice(0,8);
+  const filaMov = m => `<tr${m.plaza==='Piedras Negras / Monclova'?' class="own"':''}><td>${esc(prettyPlaza(m.plaza))}</td><td class="num">${m.anterior.toFixed(2)}%</td><td class="num">${m.actual.toFixed(2)}%</td><td class="num ${m.delta<0?'down':'up'}">${m.delta>0?'+':''}${m.delta.toFixed(2)}</td></tr>`;
+
+  const html = `
+    <div class="banner">
+      🏆 RANKING SUSPENDIDOS — PIEDRAS NEGRAS / MONCLOVA
+      <span>Semana ${semActual} vs Semana ${semAnterior} · % de usuarios suspendidos por plaza (top 24 habituales)</span>
+    </div>
+
+    <div class="cards">
+      <div class="kpi"><div class="icon">🏷️</div><div class="label">Plazas Reportadas</div><div class="value">${filasActual.length}/24</div><div class="sub">Semana ${semActual}</div></div>
+      <div class="kpi azul"><div class="icon">📊</div><div class="label">Promedio % Suspendidos</div><div class="value">${promedio.toFixed(2)}%</div><div class="sub">de las ${filasActual.length} plazas con dato</div></div>
+      <div class="kpi verde"><div class="icon">🥇</div><div class="label">Mejor Plaza</div><div class="value">${mejor?esc(prettyPlaza(mejor.plaza)):'—'}</div><div class="sub">${mejor?mejor.pct.toFixed(2)+'%':''}</div></div>
+      <div class="kpi rojo"><div class="icon">🚨</div><div class="label">Peor Plaza</div><div class="value">${peor?esc(prettyPlaza(peor.plaza)):'—'}</div><div class="sub">${peor?peor.pct.toFixed(2)+'%':''}</div></div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head">📊 Comparativa — Semana ${semActual} vs Semana ${semAnterior}</div>
+      <div class="sec-body">
+        <table>
+          <thead><tr><th>Lugar</th><th>Plaza</th><th class="num">% Sem ${semAnterior}</th><th class="num">% Sem ${semActual}</th><th class="num">Δ pts</th><th class="num">Δ Lugar</th></tr></thead>
+          <tbody>${filasComparativaHtml}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head red">⚠️ Top Empeoraron</div>
+      <div class="sec-body"><table><thead><tr><th>Plaza</th><th class="num">Sem ${semAnterior}</th><th class="num">Sem ${semActual}</th><th class="num">Δ pts</th></tr></thead><tbody>${empeoraron.map(filaMov).join('') || '<tr><td colspan="4" class="sindato">Sin movimientos.</td></tr>'}</tbody></table></div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head green">✅ Top Mejoraron</div>
+      <div class="sec-body"><table><thead><tr><th>Plaza</th><th class="num">Sem ${semAnterior}</th><th class="num">Sem ${semActual}</th><th class="num">Δ pts</th></tr></thead><tbody>${mejoraron.map(filaMov).join('') || '<tr><td colspan="4" class="sindato">Sin movimientos.</td></tr>'}</tbody></table></div>
+    </div>
+  `;
+
+  document.getElementById('app').innerHTML = html;
+}
+
+cargar().catch(err => {
+  document.getElementById('app').innerHTML =
+    '<div class="estado">No se pudo cargar el dashboard.<br>' + esc(err.message) + '</div>';
+});
+</script>
+
+</body>
+</html>
