@@ -1,0 +1,122 @@
+<meta charset="UTF-8">
+<title>Resumen KPIs SAC — Semana 31 (Archivo Maestro)</title>
+<style>
+  :root{
+    --navy:#001F5B; --verde:#8DC63F; --verde-dark:#6B9A2F; --rojo:#E8003D; --morado:#8B5CF6;
+    --surface:#fcfcfb; --card:#ffffff; --ink:#1a1f2b; --ink-muted:#5b6472; --border:#e4e7ec;
+    --highlight:#F3EFFE; --amarillo:#F5A623;
+  }
+  *{box-sizing:border-box;}
+  body{background:var(--surface); color:var(--ink); font-family:'Segoe UI',system-ui,sans-serif; margin:0; padding:16px 18px;}
+  .nota-simple{color:var(--ink-muted); font-size:11px; margin:0 0 10px;}
+  .section-banner{color:#fff; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:700; margin:12px 0 5px; box-shadow:0 2px 8px rgba(0,0,0,.08); display:flex; align-items:center; gap:6px;}
+  .section-banner.esp{background:linear-gradient(135deg,var(--morado),#6D28D9);}
+  .section-banner.lealtad{background:linear-gradient(135deg,#ED1C5E,#92278F);}
+  .section-banner.ana{background:linear-gradient(135deg,#00AEEF,#0090c9);}
+  .section-banner:first-child{margin-top:0;}
+
+  table{width:100%; border-collapse:collapse; background:var(--card); border-radius:10px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.06); font-size:10.5px; border-top:3px solid transparent; margin-bottom:18px;}
+  table.esp{border-top-color:var(--morado);}
+  table.lealtad{border-top-color:#ED1C5E;}
+  table.ana{border-top-color:#00AEEF;}
+  thead tr.col-row th{background:var(--card); color:var(--ink-muted); font-weight:600; text-align:center; padding:4px 6px; border-bottom:1px solid var(--border); font-size:8.5px; text-transform:uppercase; letter-spacing:.02em;}
+  thead tr.col-row th.kpi-col{text-align:left;}
+  thead tr.col-row th.current{background:var(--highlight); color:var(--navy);}
+  tbody td{padding:5px 6px; text-align:center; border-bottom:1px solid var(--border); white-space:nowrap;}
+  tbody td.kpi-col{text-align:left; font-weight:600; white-space:normal;}
+  tbody td.current{background:var(--highlight);}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr.total td{color:#fff; font-weight:700; padding:6px 6px;}
+  tbody tr.total.esp td{background:linear-gradient(135deg,var(--morado),#6D28D9);}
+  tbody tr.total.lealtad td{background:linear-gradient(135deg,#ED1C5E,#92278F);}
+  tbody tr.total.ana td{background:linear-gradient(135deg,#00AEEF,#0090c9);}
+  .good{color:var(--verde-dark); font-weight:700;}
+  .bad{color:var(--rojo); font-weight:700;}
+</style>
+
+<p class="nota-simple">No hubo captura de Semana 30 — se compara directo contra Semana 29.</p>
+
+<div class="section-banner esp">👔 Especialista Atención a Cliente</div>
+<table class="esp">
+  <thead>
+    <tr class="col-row">
+      <th class="kpi-col">KPI</th>
+      <th>Meta</th>
+      <th class="current">Real S31</th>
+      <th class="current">Cumpl. S31</th>
+      <th>Pond.</th>
+      <th>Logro</th>
+    </tr>
+  </thead>
+  <tbody id="tbl-especialista"></tbody>
+</table>
+
+<div class="section-banner lealtad">🤝 Especialista Campañas de Lealtad</div>
+<table class="lealtad">
+  <thead>
+    <tr class="col-row">
+      <th class="kpi-col">KPI</th>
+      <th>Meta</th>
+      <th class="current">Real S31</th>
+      <th class="current">Cumpl. S31</th>
+      <th>Pond.</th>
+      <th>Logro</th>
+    </tr>
+  </thead>
+  <tbody id="tbl-lealtad"></tbody>
+</table>
+
+<div class="section-banner ana">🎧 Analista Atención a Cliente</div>
+<table class="ana">
+  <thead>
+    <tr class="col-row">
+      <th class="kpi-col">KPI</th>
+      <th>Meta</th>
+      <th class="current">Real S31</th>
+      <th class="current">Cumpl. S31</th>
+      <th>Pond.</th>
+      <th>Logro</th>
+    </tr>
+  </thead>
+  <tbody id="tbl-analista"></tbody>
+</table>
+
+<script>
+function statusClass(cumplimiento){ return cumplimiento >= 100 ? 'good' : 'bad'; }
+
+function row(kpi, meta, real, cumplimiento, ponderacion, logro){
+  const cls = statusClass(cumplimiento);
+  const icon = cumplimiento >= 100 ? '✅' : '⚠️';
+  return `<tr>
+    <td class="kpi-col">${kpi}</td>
+    <td>${meta}</td>
+    <td class="current ${cls}">${real}</td>
+    <td class="current ${cls}">${icon} ${cumplimiento}%</td>
+    <td>${ponderacion}</td>
+    <td>${logro}</td>
+  </tr>`;
+}
+function totalRow(label, value, seccion){
+  return `<tr class="total ${seccion}"><td colspan="4">${label}</td><td>100%</td><td>${value}</td></tr>`;
+}
+
+document.getElementById('tbl-especialista').innerHTML =
+  row('Clientes Perdidos','-786','-46','1709', '10%','15%') +
+  row('Repeat Report','7.36%','10.85%','68', '20%','14%') +
+  row('CTT','4.49%','0.26%','1743', '40%','60%') +
+  row('Incumplimiento','0.5%','0.00%','100', '10%','10%') +
+  row('Efectividad de la Bitácora','75.0%','163.09%','150', '20%','30%') +
+  totalRow('Logro Total','128.56%','esp');
+
+document.getElementById('tbl-lealtad').innerHTML =
+  row('Amenazas <72H','97.75%','100.00%','102', '30%','31%') +
+  row('Retención','59.30%','88.89%','150', '60%','90%') +
+  row('Clientes Perdidos','-786','-46','1709', '10%','15%') +
+  totalRow('Logro Total','135.62%','lealtad');
+
+document.getElementById('tbl-analista').innerHTML =
+  row('Incumplimiento','0.47%','0.00%','100', '20%','20%') +
+  row('Efectividad de la Bitácora','75.00%','163.09%','217', '50%','75%') +
+  row('Días de Backlog','1.2','0.0','100', '30%','30%') +
+  totalRow('Logro Total','125.00%','ana');
+</script>

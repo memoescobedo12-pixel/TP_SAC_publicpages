@@ -1,0 +1,136 @@
+<meta charset="UTF-8">
+<title>Resumen Cancelaciones — Semana 31 (Archivo Maestro)</title>
+<style>
+  :root{
+    --navy:#001F5B;
+    --green:#8DC63F;
+    --red:#E8003D;
+    --blue:#00AEEF;
+    --yellow:#F5A623;
+    --morado:#8B5CF6;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:Segoe UI, Arial, sans-serif;
+    background:#f4f6fa;
+    margin:0;
+    padding:20px;
+    color:#1a1a1a;
+  }
+  .banner{
+    background:linear-gradient(135deg,var(--navy),#003a8c);
+    color:#fff;
+    padding:12px 18px;
+    border-radius:12px;
+    margin-bottom:14px;
+    font-weight:700;
+    font-size:14px;
+  }
+  .banner span{font-weight:400;font-size:11.5px;opacity:0.8;display:block;margin-top:2px;}
+
+  .cards{
+    display:flex;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .kpi{
+    flex:1;
+    background:#fff;
+    border-radius:12px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    padding:10px 14px;
+    border-top:4px solid var(--navy);
+    position:relative;
+  }
+  .kpi.morado{border-top-color:var(--morado);}
+  .kpi.red{border-top-color:var(--red);}
+  .kpi .label{font-size:10.5px;color:#666;font-weight:600;text-transform:uppercase;}
+  .kpi .value{font-size:24px;font-weight:800;color:var(--navy);margin:2px 0;}
+  .kpi .sub{font-size:11px;color:#555;}
+  .kpi .icon{position:absolute;top:8px;right:10px;font-size:16px;opacity:.5;}
+
+  .mini-cols{
+    display:flex;
+    gap:12px;
+  }
+  .mini{
+    flex:1;
+    background:#fff;
+    border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    overflow:hidden;
+  }
+  .mini-head{
+    padding:6px 12px;
+    font-size:11px;
+    font-weight:700;
+    color:#fff;
+    background:var(--navy);
+  }
+  .mini table{width:100%;border-collapse:collapse;font-size:11px;}
+  .mini td{padding:4px 12px;border-bottom:1px solid #eef1f6;}
+  .mini td:last-child{text-align:right;font-weight:700;color:var(--navy);}
+  .mini tr:last-child td{border-bottom:none;}
+  .mini .vacio{padding:10px 12px;font-size:11px;color:#5a6a7e;}
+  .ver-completo{display:inline-block;margin-bottom:14px;font-size:11.5px;font-weight:700;color:var(--navy);background:#fff;border:1px solid #ccd3e0;border-radius:8px;padding:6px 12px;text-decoration:none;}
+  .ver-completo:hover{background:#eef1f6;}
+</style>
+
+<div class="banner">
+  📉 CANCELACIONES — PIEDRAS NEGRAS / MONCLOVA
+  <span>Semana 31 · Detalle completo por plan disponible como anexo</span>
+</div>
+
+<a class="ver-completo" href="https://memoescobedo12-pixel.github.io/TP_SAC_publicpages/Cancelaciones/" target="_blank">📊 Ver dashboard completo →</a>
+
+<div class="cards">
+  <div class="kpi morado">
+    <div class="icon">📉</div>
+    <div class="label">Total Cancelaciones</div>
+    <div class="value">191</div>
+    <div class="sub">Semana 31</div>
+  </div>
+  <div class="kpi">
+    <div class="icon">🙋</div>
+    <div class="label">Voluntarias</div>
+    <div class="value">17</div>
+    <div class="sub">8.9% del total</div>
+  </div>
+  <div class="kpi red">
+    <div class="icon">💳</div>
+    <div class="label">Involuntarias</div>
+    <div class="value">174</div>
+    <div class="sub">91.1% del total</div>
+  </div>
+</div>
+
+<div class="mini-cols">
+  <div class="mini">
+    <div class="mini-head">📍 POR CLUSTER</div>
+    <table>
+      <tr><td>Tecnológico</td><td>46</td></tr>
+      <tr><td>Acereros</td><td>38</td></tr>
+      <tr><td>Plaza De Las Culturas</td><td>36</td></tr>
+      <tr><td>Xochipilli</td><td>27</td></tr>
+      <tr><td>Río Sabinas</td><td>15</td></tr>
+      <tr><td>Castaños</td><td>14</td></tr>
+      <tr><td>Obreras</td><td>8</td></tr>
+      <tr><td>Nueva Rosita</td><td>6</td></tr>
+      <tr><td>Ampliación Xochipilli</td><td>1</td></tr>
+    </table>
+  </div>
+  <div class="mini">
+    <div class="mini-head">📶 TOP 5 PLAN HOMOLOGADO</div>
+    <table>
+      <tr><td>150 Megas 2P</td><td>78</td></tr>
+      <tr><td>Veloz 2P</td><td>36</td></tr>
+      <tr><td>150 Megas 3P</td><td>17</td></tr>
+      <tr><td>100 Megas 3P</td><td>12</td></tr>
+      <tr><td>100 Megas 2P</td><td>12</td></tr>
+    </table>
+  </div>
+  <div class="mini">
+    <div class="mini-head">📝 MOTIVO DE BAJA (solo Voluntarias)</div>
+    <div class="vacio">ℹ️ El archivo de esta semana no trae el campo Motivo de Baja.</div>
+  </div>
+</div>

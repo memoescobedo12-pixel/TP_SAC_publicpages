@@ -1,0 +1,494 @@
+<meta charset="UTF-8">
+<title>Resumen Welcome Call — Semana 31 (Archivo Maestro)</title>
+<style>
+  :root{
+    --navy:#001F5B;
+    --green:#8DC63F;
+    --red:#E8003D;
+    --blue:#00AEEF;
+    --yellow:#F5A623;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:Segoe UI, Arial, sans-serif;
+    background:#f4f6fa;
+    margin:0;
+    padding:20px;
+    color:#1a1a1a;
+  }
+  .banner{
+    background:linear-gradient(135deg,var(--navy),#003a8c);
+    color:#fff;
+    padding:12px 18px;
+    border-radius:12px;
+    margin-bottom:14px;
+    font-weight:700;
+    font-size:14px;
+  }
+  .banner span{font-weight:400;font-size:11.5px;opacity:0.85;display:block;margin-top:3px;line-height:1.5;}
+
+  .cards{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .kpi{
+    flex:1 1 140px;
+    background:#fff;
+    border-radius:12px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    padding:9px 12px;
+    border-top:4px solid var(--navy);
+    position:relative;
+  }
+  .kpi.green{border-top-color:var(--green);}
+  .kpi.red{border-top-color:var(--red);}
+  .kpi.blue{border-top-color:var(--blue);}
+  .kpi.yellow{border-top-color:var(--yellow);}
+  .kpi .label{font-size:9.5px;color:#666;font-weight:600;text-transform:uppercase;}
+  .kpi .value{font-size:21px;font-weight:800;color:var(--navy);margin:2px 0;}
+  .kpi .sub{font-size:10px;color:#555;}
+  .kpi .icon{position:absolute;top:7px;right:9px;font-size:14px;opacity:.5;}
+
+  .mini-cols{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  .mini{
+    flex:1 1 calc(50% - 12px);
+    min-width:280px;
+    background:#fff;
+    border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    overflow:hidden;
+  }
+  .mini-head{
+    padding:6px 12px;
+    font-size:11px;
+    font-weight:700;
+    color:#fff;
+    background:var(--navy);
+  }
+  .mini-body{padding:8px 12px;font-size:11.5px;}
+  .mini-body .fila{display:flex;justify-content:space-between;padding:2px 0;}
+  .mini-body .ok{color:var(--green);font-weight:700;}
+  .mini-body .bad{color:var(--red);font-weight:700;}
+  .mini-body .peor{margin-top:5px;padding-top:5px;border-top:1px solid #eef1f6;font-size:11px;color:#555;}
+  .mini-body .peor b{color:var(--navy);}
+  .ver-completo{display:inline-block;margin-bottom:14px;font-size:11.5px;font-weight:700;color:var(--navy);background:#fff;border:1px solid #ccd3e0;border-radius:8px;padding:6px 12px;text-decoration:none;}
+  .ver-completo:hover{background:#eef1f6;}
+</style>
+
+<div class="banner">
+  📞 WELCOME CALL — PIEDRAS NEGRAS / MONCLOVA
+  <span>Primer contacto con el cliente en sus primeros días de servicio. Ataca directamente la cancelación temprana — más del 50% de cancelaciones ocurren en clientes con 6 meses o menos de antigüedad.</span>
+</div>
+
+<a class="ver-completo" href="https://memoescobedo12-pixel.github.io/TP_SAC_publicpages/Welcome/" target="_blank">📊 Ver dashboard completo →</a>
+
+<!-- RESUMEN_TOP_START (generado por scripts/welcome_resumen_top_build.py — no editar a mano) -->
+<div class="cards">
+  <div class="kpi">
+    <div class="icon">📋</div>
+    <div class="label">Total gestionado</div>
+    <div class="value">291</div>
+    <div class="sub">Semana 31</div>
+  </div>
+  <div class="kpi green">
+    <div class="icon">✅</div>
+    <div class="label">Localizados</div>
+    <div class="value">144</div>
+    <div class="sub">49.5% de casos aplicables</div>
+  </div>
+  <div class="kpi red">
+    <div class="icon">❌</div>
+    <div class="label">Ilocalizables</div>
+    <div class="value">147</div>
+    <div class="sub">50.5% de casos aplicables</div>
+  </div>
+  <div class="kpi blue">
+    <div class="icon">🎯</div>
+    <div class="label">Meta localización</div>
+    <div class="value">80%</div>
+    <div class="sub">⚠️ 30.5% bajo meta</div>
+  </div>
+  <div class="kpi yellow">
+    <div class="icon">📅</div>
+    <div class="label">Período activo</div>
+    <div class="value">Semana 31</div>
+    <div class="sub">27/07 – 02/08</div>
+  </div>
+  <div class="kpi green">
+    <div class="icon">📸</div>
+    <div class="label">Con evidencia OS</div>
+    <div class="value">290</div>
+    <div class="sub">99.7% de casos aplicables</div>
+  </div>
+</div>
+
+<div class="mini-cols">
+  <div class="mini">
+    <div class="mini-head">📍 1. Localización de Clientes</div>
+    <div class="mini-body">
+      <div class="fila"><span>Localizados</span><span class="ok">144 (49.5%)</span></div>
+      <div class="fila"><span>Ilocalizables</span><span class="bad">147 (50.5%)</span></div>
+      <div class="peor">⚠️ Coach con más ilocalizables: <b>JORGE ALBERTO GONZALEZ DE LA CRUZ</b> (27 de 49)</div>
+    </div>
+  </div>
+  <div class="mini">
+    <div class="mini-head">📸 2. Evidencias de Orden de Servicio</div>
+    <div class="mini-body">
+      <div class="fila"><span>Con evidencia</span><span class="ok">290 (99.7%)</span></div>
+      <div class="fila"><span>Sin evidencia</span><span class="bad">1 (0.3%)</span></div>
+      <div class="peor">⚠️ Coach con más faltantes: <b>BARRIOS FLORES ANA PATRICIA</b> (1 de 2)</div>
+    </div>
+  </div>
+  <div class="mini">
+    <div class="mini-head">🔔 3. Cliente Enterado — Término de Promociones</div>
+    <div class="mini-body">
+      <div class="fila"><span>Sí enterado</span><span class="ok">119 (100.0%)</span></div>
+      <div class="fila"><span>No enterado</span><span class="bad">0 (0.0%)</span></div>
+      <div class="peor">✅ 100% de cumplimiento en los 119 casos aplicables — sin coach con faltantes esta semana.</div>
+    </div>
+  </div>
+  <div class="mini">
+    <div class="mini-head">👤 4. Nombre Correcto del Cliente</div>
+    <div class="mini-body">
+      <div class="fila"><span>Correctos</span><span class="ok">151 (99.3%)</span></div>
+      <div class="fila"><span>Incorrectos</span><span class="bad">1 (0.7%)</span></div>
+      <div class="peor">⚠️ Coach con más incorrectos: <b>OSCAR GERARDO CERVANTES VILLARREAL</b> (1 de 8)</div>
+    </div>
+  </div>
+  <div class="mini">
+    <div class="mini-head">🔠 5. Registro en Mayúsculas</div>
+    <div class="mini-body">
+      <div class="fila"><span>Mayúsculas ✓</span><span class="ok">277 (95.2%)</span></div>
+      <div class="fila"><span>Minúsculas ✗</span><span class="bad">14 (4.8%)</span></div>
+      <div class="peor">⚠️ Coach con más en minúsculas: <b>SIN COACH</b> (7 de 27)</div>
+    </div>
+  </div>
+  <div class="mini">
+    <div class="mini-head">🏠 6. Dirección Correcta del Cliente</div>
+    <div class="mini-body">
+      <div class="fila"><span>Correctas</span><span class="ok">146 (98.0%)</span></div>
+      <div class="fila"><span>Incorrectas</span><span class="bad">3 (2.0%)</span></div>
+      <div class="peor">⚠️ Coaches con más incorrectas (empate): <b>JORGE ALBERTO GONZALEZ DE LA CRUZ</b> y <b>MARCO ANTONIO AMAYA FLORES</b> y <b>OSCAR GERARDO CERVANTES VILLARREAL</b> (1 cada uno)</div>
+    </div>
+  </div>
+</div>
+<!-- RESUMEN_TOP_END -->
+
+<!-- HIST_COACH_START (generado por scripts/welcome_historico_coach_build.py — no editar a mano) -->
+<style>
+  .hm-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .hm-tab{padding:5px 12px;border-radius:16px;border:2px solid #e2e8f0;background:#fff;font-size:11px;font-weight:700;cursor:pointer;color:#5a6a7e}
+  .hm-tab.active{border-color:var(--navy);background:var(--navy);color:#fff}
+  .hm-wrap{overflow-x:auto;border:1px solid #e2e8f0;border-radius:8px}
+  .hm-grid{display:grid;width:max-content}
+  .hm-cell{display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;min-width:50px;height:28px;border-right:1px solid rgba(255,255,255,.25);border-bottom:1px solid #e2e8f0;white-space:nowrap}
+  .hm-cell.empty{background:#f4f6fa!important;color:#5a6a7e!important;font-weight:400}
+  .hm-cell-n{font-size:7px;font-weight:600;opacity:.85;margin-left:2px}
+  .hm-head{background:var(--navy);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;height:24px;border-right:1px solid rgba(255,255,255,.15)}
+  .hm-coach{position:sticky;left:0;background:#fff;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:700;color:var(--navy);min-width:150px;border-right:2px solid #e2e8f0;border-bottom:1px solid #e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hm-coach.corner{background:var(--navy);color:#fff}
+  .hm-legend{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:10px;color:#5a6a7e;flex-wrap:wrap}
+  .hm-legend-bar{width:160px;height:10px;border-radius:6px}
+  .hm-summary{width:100%;border-collapse:collapse;margin-top:14px;font-size:11px}
+  .hm-summary th{background:var(--navy);color:#fff;padding:5px 8px;text-align:left;font-size:10px}
+  .hm-summary td{padding:5px 8px;border-bottom:1px solid #e2e8f0}
+  .hm-racha{font-weight:800}
+  .hm-racha.r0{color:#6B9A2F}
+  .hm-racha.r1{color:var(--yellow)}
+  .hm-racha.r2{color:var(--red)}
+  .hm-rank{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;font-size:9px;font-weight:800;color:#fff;margin-right:5px;flex-shrink:0}
+  .hm-rank.r1{background:#D4AF37}
+  .hm-rank.r2{background:#A8A8A8}
+  .hm-rank.r3{background:#B5651D}
+  .hm-nota{font-size:11px;color:#5a6a7e;margin-top:12px;padding:10px;background:#f4f6fa;border-radius:8px}
+  .hm-alert-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:12px}
+  .hm-alert-card{background:#fff5f5;border-left:3px solid var(--red);border-radius:8px;padding:10px 12px;font-size:11px}
+  .hm-alert-card.ok{background:#f0f7e6;border-left-color:var(--green)}
+  .hm-alert-card b{color:var(--navy)}
+</style>
+<div class="mini" style="flex:1 1 100%;min-width:100%;margin-top:12px">
+  <div class="mini-head">📅 Histórico por Coach — Reincidencia (S19–S31)</div>
+  <div class="mini-body">
+    <div class="hm-tabs" id="hmTabs"></div>
+    <div class="hm-wrap"><div class="hm-grid" id="hmGrid"></div></div>
+    <div class="hm-legend" id="hmLegend"></div>
+    <table class="hm-summary" id="hmSummary"></table>
+    <div class="hm-nota" id="hmNota" style="display:none"></div>
+    <div style="font-size:11px;font-weight:700;color:var(--navy);margin-top:16px">🚨 Alertas de Reincidencia <span style="font-weight:400;color:#5a6a7e">— 2+ semanas consecutivas con incidencias</span></div>
+    <div class="hm-alert-grid" id="hmAlertGrid"></div>
+  </div>
+</div>
+<script>
+(function(){
+  var HM_DATA = {"semanas": [19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31], "coaches": ["CESAR GONZALEZ TERRONES", "JORGE ALBERTO GONZALEZ DE LA CRUZ", "MARCO ANTONIO AMAYA FLORES", "MARIA DE JESUS AYME SANTILLAN RAMOS", "MIGUEL HECTOR SALAZAR LUNA", "NORMA VIVIANA RIOS COSTILLA", "OSCAR GERARDO CERVANTES VILLARREAL", "PAUL ANIBAL PUENTE LEIJA", "ROCIO ANGELICA MARQUEZ GONZALEZ"], "idx": {"CESAR GONZALEZ TERRONES": {"19": {"lo": 12, "il": 10, "nk": 0, "nb": 0, "dk": 0, "db": 0, "my": 16, "mn": 6, "pk": 11, "pb": 2}, "20": {"lo": 5, "il": 2, "nk": 6, "nb": 0, "dk": 6, "db": 0, "my": 5, "mn": 2, "pk": 5, "pb": 0}, "21": {"lo": 15, "il": 14, "nk": 16, "nb": 1, "dk": 17, "db": 0, "my": 26, "mn": 3, "pk": 9, "pb": 0}, "22": {"lo": 10, "il": 10, "nk": 10, "nb": 0, "dk": 10, "db": 0, "my": 20, "mn": 0, "pk": 7, "pb": 0}, "23": {"lo": 14, "il": 15, "nk": 12, "nb": 1, "dk": 13, "db": 0, "my": 27, "mn": 2, "pk": 11, "pb": 0}, "24": {"lo": 12, "il": 4, "nk": 12, "nb": 1, "dk": 12, "db": 1, "my": 12, "mn": 4, "pk": 9, "pb": 0}, "25": {"lo": 11, "il": 7, "nk": 12, "nb": 0, "dk": 12, "db": 0, "my": 17, "mn": 1, "pk": 9, "pb": 0}, "26": {"lo": 12, "il": 21, "nk": 13, "nb": 0, "dk": 12, "db": 0, "my": 29, "mn": 4, "pk": 11, "pb": 0}, "27": {"lo": 17, "il": 14, "nk": 16, "nb": 1, "dk": 17, "db": 0, "my": 27, "mn": 4, "pk": 13, "pb": 0}, "28": {"lo": 16, "il": 13, "nk": 16, "nb": 0, "dk": 14, "db": 2, "my": 29, "mn": 0, "pk": 14, "pb": 0}, "29": {"lo": 8, "il": 13, "nk": 11, "nb": 0, "dk": 11, "db": 0, "my": 19, "mn": 2, "pk": 8, "pb": 0}, "30": {"lo": 17, "il": 13, "nk": 18, "nb": 0, "dk": 18, "db": 0, "my": 30, "mn": 0, "pk": 15, "pb": 0}, "31": {"lo": 19, "il": 8, "nk": 23, "nb": 0, "dk": 22, "db": 0, "my": 27, "mn": 0, "pk": 18, "pb": 0}}, "JORGE ALBERTO GONZALEZ DE LA CRUZ": {"19": {"lo": 16, "il": 20, "nk": 0, "nb": 0, "dk": 0, "db": 0, "my": 36, "mn": 0, "pk": 13, "pb": 5}, "20": {"lo": 8, "il": 7, "nk": 8, "nb": 0, "dk": 7, "db": 1, "my": 15, "mn": 0, "pk": 5, "pb": 0}, "21": {"lo": 19, "il": 24, "nk": 20, "nb": 1, "dk": 21, "db": 0, "my": 43, "mn": 0, "pk": 17, "pb": 1}, "22": {"lo": 22, "il": 23, "nk": 21, "nb": 0, "dk": 20, "db": 1, "my": 45, "mn": 0, "pk": 15, "pb": 0}, "23": {"lo": 20, "il": 12, "nk": 20, "nb": 0, "dk": 19, "db": 1, "my": 32, "mn": 0, "pk": 16, "pb": 0}, "24": {"lo": 18, "il": 19, "nk": 18, "nb": 0, "dk": 18, "db": 0, "my": 37, "mn": 0, "pk": 15, "pb": 0}, "25": {"lo": 16, "il": 13, "nk": 15, "nb": 0, "dk": 15, "db": 0, "my": 29, "mn": 0, "pk": 12, "pb": 0}, "26": {"lo": 26, "il": 16, "nk": 27, "nb": 0, "dk": 26, "db": 1, "my": 42, "mn": 0, "pk": 22, "pb": 0}, "27": {"lo": 26, "il": 15, "nk": 27, "nb": 0, "dk": 27, "db": 0, "my": 41, "mn": 0, "pk": 23, "pb": 0}, "28": {"lo": 17, "il": 8, "nk": 17, "nb": 0, "dk": 17, "db": 0, "my": 25, "mn": 0, "pk": 11, "pb": 0}, "29": {"lo": 20, "il": 14, "nk": 25, "nb": 0, "dk": 25, "db": 0, "my": 34, "mn": 0, "pk": 18, "pb": 0}, "30": {"lo": 23, "il": 14, "nk": 24, "nb": 1, "dk": 25, "db": 0, "my": 37, "mn": 0, "pk": 19, "pb": 0}, "31": {"lo": 22, "il": 27, "nk": 25, "nb": 0, "dk": 24, "db": 1, "my": 49, "mn": 0, "pk": 16, "pb": 0}}, "MARCO ANTONIO AMAYA FLORES": {"19": {"lo": 13, "il": 9, "nk": 1, "nb": 1, "dk": 2, "db": 0, "my": 22, "mn": 0, "pk": 9, "pb": 2}, "20": {"lo": 8, "il": 8, "nk": 9, "nb": 0, "dk": 8, "db": 0, "my": 15, "mn": 1, "pk": 6, "pb": 0}, "21": {"lo": 15, "il": 20, "nk": 17, "nb": 0, "dk": 16, "db": 1, "my": 35, "mn": 0, "pk": 10, "pb": 0}, "22": {"lo": 15, "il": 12, "nk": 16, "nb": 0, "dk": 15, "db": 0, "my": 27, "mn": 0, "pk": 12, "pb": 0}, "23": {"lo": 12, "il": 16, "nk": 13, "nb": 0, "dk": 12, "db": 1, "my": 28, "mn": 0, "pk": 8, "pb": 0}, "24": {"lo": 21, "il": 22, "nk": 21, "nb": 1, "dk": 21, "db": 1, "my": 43, "mn": 0, "pk": 19, "pb": 0}, "25": {"lo": 5, "il": 15, "nk": 8, "nb": 0, "dk": 8, "db": 0, "my": 19, "mn": 1, "pk": 6, "pb": 0}, "26": {"lo": 18, "il": 15, "nk": 18, "nb": 0, "dk": 17, "db": 0, "my": 33, "mn": 0, "pk": 16, "pb": 0}, "27": {"lo": 23, "il": 19, "nk": 23, "nb": 2, "dk": 24, "db": 1, "my": 41, "mn": 1, "pk": 20, "pb": 0}, "28": {"lo": 17, "il": 23, "nk": 20, "nb": 0, "dk": 19, "db": 1, "my": 40, "mn": 0, "pk": 13, "pb": 0}, "29": {"lo": 16, "il": 23, "nk": 17, "nb": 0, "dk": 16, "db": 1, "my": 39, "mn": 0, "pk": 13, "pb": 0}, "30": {"lo": 8, "il": 13, "nk": 8, "nb": 0, "dk": 8, "db": 0, "my": 19, "mn": 2, "pk": 7, "pb": 0}, "31": {"lo": 6, "il": 10, "nk": 6, "nb": 0, "dk": 5, "db": 1, "my": 16, "mn": 0, "pk": 5, "pb": 0}}, "MARIA DE JESUS AYME SANTILLAN RAMOS": {"19": {"lo": 15, "il": 9, "nk": 3, "nb": 0, "dk": 3, "db": 0, "my": 24, "mn": 0, "pk": 14, "pb": 5}, "20": {"lo": 5, "il": 9, "nk": 6, "nb": 0, "dk": 5, "db": 0, "my": 13, "mn": 1, "pk": 2, "pb": 1}, "21": {"lo": 14, "il": 27, "nk": 14, "nb": 0, "dk": 12, "db": 1, "my": 35, "mn": 6, "pk": 9, "pb": 0}, "22": {"lo": 16, "il": 12, "nk": 19, "nb": 0, "dk": 16, "db": 2, "my": 27, "mn": 1, "pk": 13, "pb": 2}, "23": {"lo": 14, "il": 15, "nk": 15, "nb": 0, "dk": 15, "db": 0, "my": 29, "mn": 0, "pk": 12, "pb": 0}, "24": {"lo": 19, "il": 10, "nk": 19, "nb": 0, "dk": 18, "db": 0, "my": 28, "mn": 1, "pk": 13, "pb": 1}, "25": {"lo": 18, "il": 14, "nk": 20, "nb": 0, "dk": 20, "db": 0, "my": 26, "mn": 6, "pk": 16, "pb": 0}, "26": {"lo": 23, "il": 20, "nk": 25, "nb": 1, "dk": 25, "db": 1, "my": 36, "mn": 7, "pk": 22, "pb": 0}, "27": {"lo": 28, "il": 19, "nk": 27, "nb": 1, "dk": 28, "db": 0, "my": 46, "mn": 1, "pk": 24, "pb": 0}, "28": {"lo": 13, "il": 11, "nk": 14, "nb": 0, "dk": 14, "db": 0, "my": 23, "mn": 1, "pk": 13, "pb": 0}, "29": {"lo": 27, "il": 24, "nk": 29, "nb": 1, "dk": 29, "db": 1, "my": 48, "mn": 3, "pk": 23, "pb": 0}, "30": {"lo": 16, "il": 19, "nk": 18, "nb": 0, "dk": 18, "db": 0, "my": 35, "mn": 0, "pk": 12, "pb": 0}, "31": {"lo": 14, "il": 17, "nk": 17, "nb": 0, "dk": 16, "db": 0, "my": 30, "mn": 1, "pk": 12, "pb": 0}}, "MIGUEL HECTOR SALAZAR LUNA": {"19": {"lo": 15, "il": 9, "nk": 1, "nb": 0, "dk": 1, "db": 0, "my": 24, "mn": 0, "pk": 9, "pb": 5}, "20": {"lo": 8, "il": 3, "nk": 4, "nb": 0, "dk": 4, "db": 0, "my": 11, "mn": 0, "pk": 3, "pb": 1}, "21": {"lo": 16, "il": 18, "nk": 19, "nb": 0, "dk": 20, "db": 0, "my": 34, "mn": 0, "pk": 13, "pb": 1}, "22": {"lo": 8, "il": 5, "nk": 8, "nb": 0, "dk": 7, "db": 1, "my": 13, "mn": 0, "pk": 8, "pb": 0}, "23": {"lo": 20, "il": 18, "nk": 21, "nb": 1, "dk": 22, "db": 0, "my": 38, "mn": 0, "pk": 18, "pb": 0}, "24": {"lo": 17, "il": 15, "nk": 17, "nb": 0, "dk": 16, "db": 1, "my": 32, "mn": 0, "pk": 14, "pb": 0}, "25": {"lo": 14, "il": 19, "nk": 13, "nb": 1, "dk": 13, "db": 0, "my": 33, "mn": 0, "pk": 8, "pb": 0}, "26": {"lo": 20, "il": 18, "nk": 21, "nb": 0, "dk": 21, "db": 0, "my": 38, "mn": 0, "pk": 16, "pb": 0}, "27": {"lo": 19, "il": 19, "nk": 18, "nb": 1, "dk": 18, "db": 1, "my": 37, "mn": 1, "pk": 17, "pb": 0}, "28": {"lo": 19, "il": 10, "nk": 22, "nb": 0, "dk": 21, "db": 1, "my": 29, "mn": 0, "pk": 16, "pb": 0}, "29": {"lo": 18, "il": 19, "nk": 21, "nb": 0, "dk": 19, "db": 0, "my": 37, "mn": 0, "pk": 14, "pb": 0}, "30": {"lo": 21, "il": 21, "nk": 19, "nb": 2, "dk": 21, "db": 0, "my": 42, "mn": 0, "pk": 17, "pb": 0}, "31": {"lo": 13, "il": 17, "nk": 12, "nb": 0, "dk": 12, "db": 0, "my": 30, "mn": 0, "pk": 12, "pb": 0}}, "NORMA VIVIANA RIOS COSTILLA": {"19": {"lo": 21, "il": 15, "nk": 3, "nb": 0, "dk": 3, "db": 0, "my": 36, "mn": 0, "pk": 14, "pb": 6}, "20": {"lo": 3, "il": 3, "nk": 1, "nb": 0, "dk": 1, "db": 0, "my": 6, "mn": 0, "pk": 3, "pb": 0}, "21": {"lo": 18, "il": 14, "nk": 20, "nb": 1, "dk": 21, "db": 1, "my": 32, "mn": 0, "pk": 14, "pb": 0}, "22": {"lo": 25, "il": 17, "nk": 27, "nb": 0, "dk": 27, "db": 0, "my": 42, "mn": 0, "pk": 21, "pb": 0}, "23": {"lo": 18, "il": 17, "nk": 19, "nb": 0, "dk": 18, "db": 1, "my": 35, "mn": 0, "pk": 16, "pb": 0}, "24": {"lo": 20, "il": 19, "nk": 22, "nb": 0, "dk": 21, "db": 1, "my": 39, "mn": 0, "pk": 15, "pb": 0}, "25": {"lo": 17, "il": 20, "nk": 20, "nb": 1, "dk": 21, "db": 0, "my": 36, "mn": 1, "pk": 14, "pb": 1}, "26": {"lo": 25, "il": 14, "nk": 24, "nb": 1, "dk": 24, "db": 0, "my": 39, "mn": 0, "pk": 19, "pb": 0}, "27": {"lo": 23, "il": 29, "nk": 23, "nb": 0, "dk": 23, "db": 0, "my": 52, "mn": 0, "pk": 18, "pb": 0}, "28": {"lo": 13, "il": 21, "nk": 15, "nb": 0, "dk": 15, "db": 0, "my": 34, "mn": 0, "pk": 11, "pb": 0}, "29": {"lo": 17, "il": 18, "nk": 21, "nb": 0, "dk": 20, "db": 0, "my": 35, "mn": 0, "pk": 14, "pb": 0}, "30": {"lo": 14, "il": 11, "nk": 15, "nb": 0, "dk": 14, "db": 0, "my": 25, "mn": 0, "pk": 13, "pb": 0}, "31": {"lo": 18, "il": 17, "nk": 18, "nb": 0, "dk": 18, "db": 0, "my": 35, "mn": 0, "pk": 17, "pb": 0}}, "OSCAR GERARDO CERVANTES VILLARREAL": {"19": {"lo": 13, "il": 18, "nk": 2, "nb": 1, "dk": 3, "db": 0, "my": 28, "mn": 3, "pk": 9, "pb": 3}, "20": {"lo": 2, "il": 3, "nk": 3, "nb": 0, "dk": 2, "db": 0, "my": 4, "mn": 1, "pk": 1, "pb": 0}, "21": {"lo": 11, "il": 13, "nk": 13, "nb": 1, "dk": 14, "db": 0, "my": 21, "mn": 3, "pk": 6, "pb": 0}, "22": {"lo": 7, "il": 6, "nk": 8, "nb": 0, "dk": 8, "db": 0, "my": 13, "mn": 0, "pk": 7, "pb": 0}, "23": {"lo": 19, "il": 9, "nk": 21, "nb": 0, "dk": 20, "db": 1, "my": 27, "mn": 1, "pk": 12, "pb": 0}, "24": {"lo": 8, "il": 11, "nk": 11, "nb": 0, "dk": 11, "db": 0, "my": 19, "mn": 0, "pk": 6, "pb": 0}, "25": {"lo": 10, "il": 16, "nk": 11, "nb": 0, "dk": 11, "db": 0, "my": 25, "mn": 1, "pk": 9, "pb": 0}, "26": {"lo": 20, "il": 13, "nk": 19, "nb": 0, "dk": 18, "db": 1, "my": 32, "mn": 1, "pk": 15, "pb": 0}, "27": {"lo": 10, "il": 23, "nk": 12, "nb": 0, "dk": 12, "db": 0, "my": 32, "mn": 1, "pk": 7, "pb": 0}, "28": {"lo": 10, "il": 19, "nk": 10, "nb": 1, "dk": 10, "db": 1, "my": 29, "mn": 0, "pk": 6, "pb": 0}, "29": {"lo": 9, "il": 11, "nk": 10, "nb": 0, "dk": 10, "db": 0, "my": 18, "mn": 2, "pk": 10, "pb": 0}, "30": {"lo": 14, "il": 14, "nk": 13, "nb": 0, "dk": 13, "db": 0, "my": 28, "mn": 0, "pk": 11, "pb": 0}, "31": {"lo": 8, "il": 11, "nk": 7, "nb": 1, "dk": 7, "db": 1, "my": 19, "mn": 0, "pk": 6, "pb": 0}}, "PAUL ANIBAL PUENTE LEIJA": {"19": {"lo": 12, "il": 17, "nk": 2, "nb": 0, "dk": 2, "db": 0, "my": 28, "mn": 1, "pk": 9, "pb": 4}, "20": {"lo": 7, "il": 7, "nk": 5, "nb": 0, "dk": 4, "db": 0, "my": 14, "mn": 0, "pk": 5, "pb": 0}, "21": {"lo": 14, "il": 15, "nk": 13, "nb": 0, "dk": 12, "db": 1, "my": 29, "mn": 0, "pk": 8, "pb": 1}, "22": {"lo": 17, "il": 23, "nk": 20, "nb": 1, "dk": 20, "db": 0, "my": 39, "mn": 1, "pk": 16, "pb": 0}, "23": {"lo": 21, "il": 21, "nk": 23, "nb": 0, "dk": 23, "db": 0, "my": 42, "mn": 0, "pk": 16, "pb": 1}, "24": {"lo": 23, "il": 18, "nk": 21, "nb": 1, "dk": 20, "db": 2, "my": 41, "mn": 0, "pk": 16, "pb": 0}, "25": {"lo": 15, "il": 13, "nk": 15, "nb": 1, "dk": 16, "db": 0, "my": 28, "mn": 0, "pk": 12, "pb": 0}, "26": {"lo": 24, "il": 12, "nk": 25, "nb": 0, "dk": 25, "db": 0, "my": 36, "mn": 0, "pk": 20, "pb": 0}, "27": {"lo": 24, "il": 31, "nk": 29, "nb": 0, "dk": 28, "db": 0, "my": 55, "mn": 0, "pk": 22, "pb": 0}, "28": {"lo": 20, "il": 19, "nk": 24, "nb": 0, "dk": 24, "db": 0, "my": 39, "mn": 0, "pk": 18, "pb": 0}, "29": {"lo": 28, "il": 21, "nk": 28, "nb": 0, "dk": 28, "db": 0, "my": 48, "mn": 1, "pk": 25, "pb": 0}, "30": {"lo": 26, "il": 20, "nk": 26, "nb": 0, "dk": 26, "db": 0, "my": 45, "mn": 1, "pk": 23, "pb": 0}, "31": {"lo": 13, "il": 15, "nk": 13, "nb": 0, "dk": 13, "db": 0, "my": 27, "mn": 1, "pk": 11, "pb": 0}}, "ROCIO ANGELICA MARQUEZ GONZALEZ": {"19": {"lo": 7, "il": 9, "nk": 0, "nb": 0, "dk": 0, "db": 0, "my": 9, "mn": 7, "pk": 3, "pb": 3}, "20": {"lo": 3, "il": 2, "nk": 2, "nb": 0, "dk": 2, "db": 0, "my": 4, "mn": 1, "pk": 2, "pb": 0}, "21": {"lo": 6, "il": 10, "nk": 7, "nb": 1, "dk": 7, "db": 0, "my": 14, "mn": 2, "pk": 5, "pb": 1}, "22": {"lo": 0, "il": 4, "nk": 0, "nb": 0, "dk": 0, "db": 0, "my": 4, "mn": 0, "pk": 0, "pb": 0}, "23": {"lo": 9, "il": 2, "nk": 7, "nb": 1, "dk": 8, "db": 0, "my": 11, "mn": 0, "pk": 6, "pb": 0}, "24": {"lo": 11, "il": 5, "nk": 11, "nb": 1, "dk": 12, "db": 0, "my": 16, "mn": 0, "pk": 9, "pb": 0}, "25": {"lo": 7, "il": 4, "nk": 7, "nb": 1, "dk": 7, "db": 0, "my": 11, "mn": 0, "pk": 5, "pb": 0}, "26": {"lo": 7, "il": 6, "nk": 7, "nb": 0, "dk": 7, "db": 0, "my": 13, "mn": 0, "pk": 4, "pb": 0}, "27": {"lo": 5, "il": 8, "nk": 5, "nb": 0, "dk": 5, "db": 0, "my": 13, "mn": 0, "pk": 4, "pb": 0}, "28": {"lo": 6, "il": 7, "nk": 7, "nb": 0, "dk": 7, "db": 0, "my": 12, "mn": 1, "pk": 5, "pb": 0}, "29": {"lo": 15, "il": 13, "nk": 17, "nb": 0, "dk": 17, "db": 0, "my": 27, "mn": 1, "pk": 14, "pb": 0}, "30": {"lo": 9, "il": 4, "nk": 9, "nb": 0, "dk": 7, "db": 2, "my": 13, "mn": 0, "pk": 8, "pb": 0}, "31": {"lo": 8, "il": 7, "nk": 8, "nb": 0, "dk": 8, "db": 0, "my": 15, "mn": 0, "pk": 7, "pb": 0}}}};
+  var HM_METRICAS=[
+    {id:'loc',label:'Localización',bien:'lo',mal:'il',meta:80,empinado:false},
+    {id:'ent',label:'Cliente Enterado',bien:'pk',mal:'pb',meta:100,empinado:true},
+    {id:'nom',label:'Nombre Correcto',bien:'nk',mal:'nb',meta:100,empinado:true},
+    {id:'dir',label:'Dirección Correcta',bien:'dk',mal:'db',meta:100,empinado:true},
+    {id:'may',label:'Mayúsculas',bien:'my',mal:'mn',meta:100,empinado:true}
+  ];
+  var hmMetrica='loc';
+  var HM_UMBRAL_ALERTA=2;
+  var HM_STOPS_ANCHO=[{p:0,c:[139,0,0]},{p:40,c:[232,0,61]},{p:60,c:[245,166,35]},{p:80,c:[141,198,63]},{p:100,c:[27,94,32]}];
+  var HM_STOPS_EMPINADO=[{p:0,c:[139,0,0]},{p:60,c:[232,0,61]},{p:80,c:[245,166,35]},{p:95,c:[247,220,111]},{p:100,c:[141,198,63]}];
+
+  function pct(a,b){return(a+b)>0?((a/(a+b))*100).toFixed(1):'0.0';}
+  function hmDatoSemana(coach,semana,m){
+    var porCoach=HM_DATA.idx[coach];
+    var x=porCoach&&porCoach[semana];
+    if(!x)return{bien:0,mal:0,total:0};
+    var bien=x[m.bien]||0, mal=x[m.mal]||0;
+    return{bien:bien,mal:mal,total:bien+mal};
+  }
+  function hmSerieCoach(coach,m){
+    return HM_DATA.semanas.map(function(s){var d=hmDatoSemana(coach,String(s),m);d.s=s;return d;});
+  }
+  function hmRacha(serie){
+    var trabajadas=serie.filter(function(p){return p.total>0;});
+    var racha=0;
+    for(var i=trabajadas.length-1;i>=0;i--){ if(trabajadas[i].mal>0)racha++; else break; }
+    return{
+      racha:racha,
+      conIncidencia:trabajadas.filter(function(p){return p.mal>0;}).length,
+      trabajadas:trabajadas.length,
+      actual:trabajadas.length?trabajadas[trabajadas.length-1].mal>0:false
+    };
+  }
+  function hmColor(pctVal,empinado){
+    var stops=empinado?HM_STOPS_EMPINADO:HM_STOPS_ANCHO;
+    var v=Math.max(0,Math.min(100,pctVal));
+    for(var i=0;i<stops.length-1;i++){
+      var a=stops[i],b=stops[i+1];
+      if(v>=a.p&&v<=b.p){
+        var t=(v-a.p)/((b.p-a.p)||1);
+        return a.c.map(function(x,i2){return Math.round(x+(b.c[i2]-x)*t);});
+      }
+    }
+    return stops[stops.length-1].c;
+  }
+  function hmTextColor(rgb){
+    var lum=(0.299*rgb[0]+0.587*rgb[1]+0.114*rgb[2])/255;
+    return lum>0.55?'#1a2540':'#fff';
+  }
+  function hmSetMetrica(id){ hmMetrica=id; renderHeatmap(); }
+  window.hmSetMetrica=hmSetMetrica;
+  function renderHmTabs(){
+    document.getElementById('hmTabs').innerHTML=HM_METRICAS.map(function(m){
+      return '<button class="hm-tab'+(m.id===hmMetrica?' active':'')+'" onclick="hmSetMetrica(\''+m.id+'\')">'+m.label+'</button>';
+    }).join('');
+  }
+  function renderHeatmap(){
+    document.querySelectorAll('.hm-tab').forEach(function(b,i){b.classList.toggle('active',HM_METRICAS[i].id===hmMetrica);});
+    var m=HM_METRICAS.filter(function(x){return x.id===hmMetrica;})[0];
+    var semanas=HM_DATA.semanas;
+    var filas=HM_DATA.coaches.map(function(coach){
+      var serie=hmSerieCoach(coach,m);
+      var r=hmRacha(serie);
+      return{coach:coach,serie:serie,racha:r.racha,conIncidencia:r.conIncidencia,trabajadas:r.trabajadas,actual:r.actual};
+    }).sort(function(a,b){return (b.conIncidencia-a.conIncidencia)||(b.racha-a.racha);});
+
+    var grid=document.getElementById('hmGrid');
+    grid.style.gridTemplateColumns='150px repeat('+semanas.length+',50px)';
+    var html='<div class="hm-coach corner">Coach</div>';
+    semanas.forEach(function(s){html+='<div class="hm-head">S'+s+'</div>';});
+    filas.forEach(function(fila){
+      var nombreCorto=fila.coach.split(' ').slice(0,2).join(' ');
+      html+='<div class="hm-coach" title="'+fila.coach+'">'+nombreCorto+'</div>';
+      fila.serie.forEach(function(p){
+        if(p.total===0){
+          html+='<div class="hm-cell empty" title="'+fila.coach+' · S'+p.s+': sin casos aplicables">—</div>';
+        } else {
+          var pctVal=parseFloat(pct(p.bien,p.mal));
+          var rgb=hmColor(pctVal,m.empinado);
+          var cuentaTxt=p.mal>0?' <span class="hm-cell-n">('+p.mal+')</span>':'';
+          html+='<div class="hm-cell" style="background:rgb('+rgb.join(',')+');color:'+hmTextColor(rgb)+'" title="'+fila.coach+' · S'+p.s+': '+pctVal.toFixed(1)+'% ('+p.bien+' bien / '+p.mal+' mal de '+p.total+')">'+pctVal.toFixed(0)+'%'+cuentaTxt+'</div>';
+        }
+      });
+    });
+    grid.innerHTML=html;
+
+    var stops=m.empinado?HM_STOPS_EMPINADO:HM_STOPS_ANCHO;
+    document.getElementById('hmLegend').innerHTML=
+      '<span>0%</span><div class="hm-legend-bar" style="background:linear-gradient(90deg,'+stops.map(function(s){return 'rgb('+s.c.join(',')+') '+s.p+'%';}).join(',')+')"></div><span>100%</span><span>🎯 Meta: '+m.meta+'%</span><span>· ( ) = cuentas malas</span>';
+
+    if(m.id==='loc'){
+      document.getElementById('hmSummary').style.display='none';
+      document.getElementById('hmNota').style.display='block';
+    } else {
+      document.getElementById('hmSummary').style.display='';
+      document.getElementById('hmNota').style.display='none';
+      renderHmResumen(filas);
+    }
+  }
+  function renderHmResumen(filas){
+    var rows=filas.map(function(f,i){
+      var rClass=f.racha>=HM_UMBRAL_ALERTA?'r2':f.racha===1?'r1':'r0';
+      var rank=(i<3&&f.conIncidencia>0)?('<span class="hm-rank r'+(i+1)+'">'+(i+1)+'</span>'):'';
+      return '<tr><td>'+rank+f.coach+'</td><td>'+(f.actual?'🔴':'🟢')+'</td>'+
+        '<td class="hm-racha '+rClass+'">'+f.racha+' sem.</td>'+
+        '<td>'+f.conIncidencia+' de '+f.trabajadas+'</td></tr>';
+    }).join('');
+    document.getElementById('hmSummary').innerHTML='<tr><th>Coach</th><th>Sem. actual</th><th>Racha</th><th>Total histórico</th></tr>'+rows;
+  }
+  function renderHmAlertas(){
+    var alertas=[];
+    HM_METRICAS.filter(function(m){return m.id!=='loc';}).forEach(function(m){
+      HM_DATA.coaches.forEach(function(coach){
+        var r=hmRacha(hmSerieCoach(coach,m));
+        if(r.racha>=HM_UMBRAL_ALERTA)alertas.push({coach:coach,metrica:m.label,racha:r.racha});
+      });
+    });
+    var cont=document.getElementById('hmAlertGrid');
+    if(!alertas.length){
+      cont.innerHTML='<div class="hm-alert-card ok">✅ Sin reincidencias activas — ningún coach tiene '+HM_UMBRAL_ALERTA+'+ semanas consecutivas con incidencias.</div>';
+      return;
+    }
+    alertas.sort(function(a,b){return b.racha-a.racha;});
+    cont.innerHTML=alertas.map(function(a){
+      return '<div class="hm-alert-card">🚨 <b>'+a.coach.split(' ').slice(0,2).join(' ')+'</b> lleva '+a.racha+' semanas seguidas con incidencias en '+a.metrica+'.</div>';
+    }).join('');
+  }
+  renderHmTabs();
+  renderHeatmap();
+  renderHmAlertas();
+})();
+</script>
+<!-- HIST_COACH_END -->
+
+<!-- HIST_TECNICO_START (generado por scripts/welcome_tecnico_historico_maestro_build.py — no editar a mano) -->
+<style>
+  .tec-wrap{overflow-x:auto;border:1px solid #e2e8f0;border-radius:8px}
+  .tec-grid{display:grid;width:max-content}
+  .tec-cell{display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;min-width:50px;height:28px;border-right:1px solid rgba(255,255,255,.25);border-bottom:1px solid #e2e8f0;white-space:nowrap}
+  .tec-cell.empty{background:#f4f6fa!important;color:#5a6a7e!important;font-weight:400}
+  .tec-cell-n{font-size:7px;font-weight:600;opacity:.85;margin-left:2px}
+  .tec-head{background:var(--navy);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;height:24px;border-right:1px solid rgba(255,255,255,.15)}
+  .tec-coach{position:sticky;left:0;background:#fff;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:700;color:var(--navy);min-width:170px;border-right:2px solid #e2e8f0;border-bottom:1px solid #e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tec-coach.corner{background:var(--navy);color:#fff}
+  .tec-legend{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:10px;color:#5a6a7e;flex-wrap:wrap}
+  .tec-legend-bar{width:160px;height:10px;border-radius:6px}
+  .tec-alert-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:12px}
+  .tec-alert-card{background:#fff5f5;border-left:3px solid var(--red);border-radius:8px;padding:10px 12px;font-size:11px}
+  .tec-alert-card.ok{background:#f0f7e6;border-left-color:var(--green)}
+  .tec-alert-card b{color:var(--navy)}
+  .tec-empty-msg{font-size:11px;color:#5a6a7e;padding:10px;background:#f0f7e6;border-radius:8px}
+</style>
+<div class="mini" style="flex:1 1 100%;min-width:100%;margin-top:12px">
+  <div class="mini-head">🔧 Histórico por Técnico — Reincidencia (Evidencias OS) — con incidencia en S31</div>
+  <div class="mini-body">
+    <div id="tecHmEmpty" class="tec-empty-msg" style="display:none">✅ Ningún técnico tuvo casos sin evidencia en la semana 31.</div>
+    <div class="tec-wrap"><div class="tec-grid" id="tecGrid"></div></div>
+    <div class="tec-legend" id="tecLegend"></div>
+    <div style="font-size:11px;font-weight:700;color:var(--navy);margin-top:16px">🚨 Alertas de Reincidencia <span style="font-weight:400;color:#5a6a7e">— 2+ semanas consecutivas sin subir evidencia correctamente</span></div>
+    <div class="tec-alert-grid" id="tecAlertGrid"></div>
+  </div>
+</div>
+<script>
+(function(){
+  var TEC_DATA = {"semanas": [19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31], "tecnicos": ["Mario Andres Corpus Martinez"], "idx": {"Mario Andres Corpus Martinez": {"19": {"ek": 4, "eb": 1}, "20": {"ek": 1, "eb": 0}, "21": {"ek": 6, "eb": 1}, "22": {"ek": 2, "eb": 1}, "23": {"ek": 4, "eb": 1}, "24": {"ek": 7, "eb": 1}, "25": {"ek": 5, "eb": 0}, "26": {"ek": 7, "eb": 0}, "27": {"ek": 7, "eb": 1}, "28": {"ek": 5, "eb": 0}, "29": {"ek": 8, "eb": 0}, "30": {"ek": 6, "eb": 0}, "31": {"ek": 0, "eb": 1}}}};
+  var TEC_UMBRAL_ALERTA=2;
+  var HM_STOPS_EMPINADO=[{p:0,c:[139,0,0]},{p:60,c:[232,0,61]},{p:80,c:[245,166,35]},{p:95,c:[247,220,111]},{p:100,c:[141,198,63]}];
+
+  function pct(a,b){return(a+b)>0?((a/(a+b))*100).toFixed(1):'0.0';}
+  function tecDatoSemana(tec,semana){
+    var porTec=TEC_DATA.idx[tec];
+    var x=porTec&&porTec[semana];
+    if(!x)return{bien:0,mal:0,total:0};
+    var bien=x.ek||0, mal=x.eb||0;
+    return{bien:bien,mal:mal,total:bien+mal};
+  }
+  function tecSerie(tec){
+    return TEC_DATA.semanas.map(function(s){var d=tecDatoSemana(tec,String(s));d.s=s;return d;});
+  }
+  function tecRacha(serie){
+    var trabajadas=serie.filter(function(p){return p.total>0;});
+    var racha=0;
+    for(var i=trabajadas.length-1;i>=0;i--){ if(trabajadas[i].mal>0)racha++; else break; }
+    return{
+      racha:racha,
+      conIncidencia:trabajadas.filter(function(p){return p.mal>0;}).length,
+      trabajadas:trabajadas.length,
+      actual:trabajadas.length?trabajadas[trabajadas.length-1].mal>0:false
+    };
+  }
+  function hmColor(pctVal){
+    var stops=HM_STOPS_EMPINADO;
+    var v=Math.max(0,Math.min(100,pctVal));
+    for(var i=0;i<stops.length-1;i++){
+      var a=stops[i],b=stops[i+1];
+      if(v>=a.p&&v<=b.p){
+        var t=(v-a.p)/((b.p-a.p)||1);
+        return a.c.map(function(x,i2){return Math.round(x+(b.c[i2]-x)*t);});
+      }
+    }
+    return stops[stops.length-1].c;
+  }
+  function hmTextColor(rgb){
+    var lum=(0.299*rgb[0]+0.587*rgb[1]+0.114*rgb[2])/255;
+    return lum>0.55?'#1a2540':'#fff';
+  }
+  function renderHeatmap(){
+    var semanas=TEC_DATA.semanas;
+    if(!TEC_DATA.tecnicos.length){
+      document.getElementById('tecHmEmpty').style.display='block';
+      document.querySelector('.tec-wrap').style.display='none';
+      document.getElementById('tecLegend').style.display='none';
+      return;
+    }
+    var filas=TEC_DATA.tecnicos.map(function(tec){
+      var serie=tecSerie(tec);
+      var r=tecRacha(serie);
+      return{tecnico:tec,serie:serie,racha:r.racha,conIncidencia:r.conIncidencia,trabajadas:r.trabajadas,actual:r.actual};
+    }).sort(function(a,b){return (b.conIncidencia-a.conIncidencia)||(b.racha-a.racha);});
+
+    var grid=document.getElementById('tecGrid');
+    grid.style.gridTemplateColumns='170px repeat('+semanas.length+',50px)';
+    var html='<div class="tec-coach corner">Técnico</div>';
+    semanas.forEach(function(s){html+='<div class="tec-head">S'+s+'</div>';});
+    filas.forEach(function(fila){
+      html+='<div class="tec-coach" title="'+fila.tecnico+'">'+fila.tecnico+'</div>';
+      fila.serie.forEach(function(p){
+        if(p.total===0){
+          html+='<div class="tec-cell empty" title="'+fila.tecnico+' · S'+p.s+': sin casos esa semana">—</div>';
+        } else {
+          var pctVal=parseFloat(pct(p.bien,p.mal));
+          var rgb=hmColor(pctVal);
+          var cuentaTxt=p.mal>0?' <span class="tec-cell-n">('+p.mal+')</span>':'';
+          html+='<div class="tec-cell" style="background:rgb('+rgb.join(',')+');color:'+hmTextColor(rgb)+'" title="'+fila.tecnico+' · S'+p.s+': '+pctVal.toFixed(1)+'% ('+p.bien+' bien / '+p.mal+' mal de '+p.total+')">'+pctVal.toFixed(0)+'%'+cuentaTxt+'</div>';
+        }
+      });
+    });
+    grid.innerHTML=html;
+
+    var stops=HM_STOPS_EMPINADO;
+    document.getElementById('tecLegend').innerHTML=
+      '<span>0%</span><div class="tec-legend-bar" style="background:linear-gradient(90deg,'+stops.map(function(s){return 'rgb('+s.c.join(',')+') '+s.p+'%';}).join(',')+')"></div><span>100%</span><span>🎯 Meta: 100%</span><span>· ( ) = cuentas malas</span>';
+  }
+  function renderAlertas(){
+    var alertas=[];
+    TEC_DATA.tecnicos.forEach(function(tec){
+      var r=tecRacha(tecSerie(tec));
+      if(r.racha>=TEC_UMBRAL_ALERTA)alertas.push({tecnico:tec,racha:r.racha});
+    });
+    var cont=document.getElementById('tecAlertGrid');
+    if(!alertas.length){
+      cont.innerHTML='<div class="tec-alert-card ok">✅ Sin reincidencias activas — ningún técnico tiene '+TEC_UMBRAL_ALERTA+'+ semanas consecutivas sin subir evidencia correctamente.</div>';
+      return;
+    }
+    alertas.sort(function(a,b){return b.racha-a.racha;});
+    cont.innerHTML=alertas.map(function(a){
+      return '<div class="tec-alert-card">🚨 <b>'+a.tecnico+'</b> lleva '+a.racha+' semanas seguidas sin subir evidencia correctamente.</div>';
+    }).join('');
+  }
+  renderHeatmap();
+  renderAlertas();
+})();
+</script>
+<!-- HIST_TECNICO_END -->
