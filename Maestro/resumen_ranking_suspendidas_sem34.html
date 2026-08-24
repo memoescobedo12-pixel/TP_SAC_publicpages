@@ -1,0 +1,134 @@
+<meta charset="UTF-8">
+<title>Resumen Ranking Suspendidos — Semana 34 (Archivo Maestro)</title>
+<style>
+  :root{
+    --navy:#001F5B;
+    --green:#8DC63F;
+    --red:#E8003D;
+    --blue:#00AEEF;
+    --yellow:#F5A623;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:Segoe UI, Arial, sans-serif;
+    background:#f4f6fa;
+    margin:0;
+    padding:20px;
+    color:#1a1a1a;
+  }
+  .banner{
+    background:linear-gradient(135deg,var(--navy),#003a8c);
+    color:#fff;
+    padding:14px 20px;
+    border-radius:12px;
+    margin-bottom:16px;
+    font-weight:700;
+    font-size:15px;
+  }
+  .banner span{font-weight:400;font-size:12px;opacity:0.8;display:block;margin-top:2px;}
+
+  .cards{
+    display:flex;
+    gap:14px;
+    margin-bottom:16px;
+  }
+  .kpi{
+    flex:1;
+    background:#fff;
+    border-radius:14px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    padding:16px 18px;
+    border-top:5px solid var(--navy);
+    position:relative;
+  }
+  .kpi.bad{border-top-color:var(--red);}
+  .kpi.good{border-top-color:var(--green);}
+  .kpi .label{font-size:12px;color:#666;font-weight:600;text-transform:uppercase;}
+  .kpi .value{font-size:32px;font-weight:800;color:var(--navy);margin:4px 0;}
+  .kpi .sub{font-size:12.5px;color:#555;}
+  .kpi .sub .up{color:var(--red);font-weight:700;}
+  .kpi .sub .down{color:#2f8f2f;font-weight:700;}
+  .kpi .icon{position:absolute;top:10px;right:12px;font-size:18px;opacity:.5;}
+
+  .mini-cols{
+    display:flex;
+    gap:14px;
+    margin-bottom:16px;
+  }
+  .mini{
+    flex:1;
+    background:#fff;
+    border-radius:12px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    overflow:hidden;
+  }
+  .mini-head{
+    padding:8px 14px;
+    font-size:12.5px;
+    font-weight:700;
+    color:#fff;
+  }
+  .mini-head.red{background:var(--red);}
+  .mini-head.green{background:var(--green);color:#0d2b00;}
+  .mini-head .total{font-weight:400;opacity:0.85;font-size:11.5px;float:right;}
+  .mini table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .mini td{padding:6px 14px;border-bottom:1px solid #eef1f6;}
+  .mini td:last-child{text-align:right;font-weight:700;}
+  .mini tr:last-child td{border-bottom:none;}
+  .mini .up{color:var(--red);}
+  .mini .down{color:#2f8f2f;}
+  .mini tr.own td{background:#fff3b0;font-weight:700;}
+  .mini tr.own td:first-child{border-left:3px solid var(--yellow);}
+  .mini .vacio{padding:10px 14px;font-size:11.5px;color:#5a6a7e;}
+
+  .datanote{
+    font-size:11.5px;
+    color:#8a5a00;
+    background:#fff8e6;
+    border:1px solid #f0e0b0;
+    border-radius:10px;
+    padding:8px 14px;
+    margin-bottom:16px;
+  }
+  .ver-completo{display:inline-block;margin-bottom:16px;font-size:12px;font-weight:700;color:var(--navy);background:#fff;border:1px solid #ccd3e0;border-radius:8px;padding:6px 12px;text-decoration:none;}
+  .ver-completo:hover{background:#eef1f6;}
+</style>
+
+<div class="banner">
+  📊 RANKING SUSPENDIDOS — PIEDRAS NEGRAS / MONCLOVA
+  <span>Semana 34 vs Semana 33 · Detalle completo (6 distritos Frontera) disponible como anexo</span>
+</div>
+
+<a class="ver-completo" href="https://memoescobedo12-pixel.github.io/TP_SAC_publicpages/Ranking/" target="_blank">📊 Ver dashboard completo →</a>
+
+
+
+<div class="cards">
+  <div class="kpi bad">
+    <div class="icon">📊</div>
+    <div class="label">% Suspendidas actual</div>
+    <div class="value">5.42%</div>
+    <div class="sub"><span class="up">▲ +0.09 pts</span> vs semana 33 (5.33%)</div>
+  </div>
+  <div class="kpi ">
+    <div class="icon">📉</div>
+    <div class="label">Posición en ranking (de 6 plazas)</div>
+    <div class="value">Lugar 1</div>
+    <div class="sub">Se mantuvo en el mismo lugar que semana 33.</div>
+  </div>
+</div>
+
+<div class="mini-cols">
+  <div class="mini">
+    <div class="mini-head red">📉 TOP QUE MÁS EMPEORARON (por % de puntos)<span class="total">Total: 6 plazas</span></div>
+    <table>
+      <tr><td>1. Matamoros</td><td class="up">+0.10 pts</td></tr>
+      <tr class="own"><td>2. Piedras Negras / Monclova ★</td><td class="up">+0.09 pts</td></tr>
+      <tr><td>3. Reynosa</td><td class="up">+0.07 pts</td></tr>
+    </table>
+  </div>
+  <div class="mini">
+    <div class="mini-head green">📈 TOP MEJORARON (por % de puntos)<span class="total">Total: 0 plazas</span></div>
+    <div class="vacio">Sin plazas en este grupo esta semana.</div>
+  </div>
+</div>

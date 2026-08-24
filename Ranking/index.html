@@ -70,11 +70,8 @@ const API_KEY = 'AIzaSyASHf7J097a_nD6sSJxZHo7kiDn_edntuc';
 const RANGE = "'Untitled'!A2:E5000";
 
 const PLAZAS_HABITUALES = [
-  "Los Mochis", "Ciudad Obregon / Navojoa", "Mexicali", "La Laguna",
-  "Ciudad Juarez", "Coatza / Mina", "Nuevo Laredo", "Tijuana", "Tepic",
-  "Mazatlan", "Tampico", "Cancun", "Tuxtla", "Piedras Negras / Monclova",
-  "Chihuahua", "Culiacan", "Ciudad Victoria", "Matamoros", "Villahermosa",
-  "Reynosa", "Saltillo", "Leon", "Hermosillo", "Poza Rica",
+  "Piedras Negras / Monclova", "Matamoros", "Ciudad Victoria",
+  "Tampico", "Nuevo Laredo", "Reynosa",
 ];
 const ACENTOS_PLAZA = {"Leon":"León"};
 function prettyPlaza(n){ return ACENTOS_PLAZA[n] || n; }
@@ -166,11 +163,11 @@ async function cargar(){
   const html = `
     <div class="banner">
       🏆 RANKING SUSPENDIDOS — PIEDRAS NEGRAS / MONCLOVA
-      <span>Semana ${semActual} vs Semana ${semAnterior} · % de usuarios suspendidos por plaza (top 24 habituales)</span>
+      <span>Semana ${semActual} vs Semana ${semAnterior} · % de usuarios suspendidos — 6 distritos de la región Frontera</span>
     </div>
 
     <div class="cards">
-      <div class="kpi"><div class="icon">🏷️</div><div class="label">Plazas Reportadas</div><div class="value">${filasActual.length}/24</div><div class="sub">Semana ${semActual}</div></div>
+      <div class="kpi"><div class="icon">🏷️</div><div class="label">Plazas Reportadas</div><div class="value">${filasActual.length}/${PLAZAS_HABITUALES.length}</div><div class="sub">Semana ${semActual}</div></div>
       <div class="kpi azul"><div class="icon">📊</div><div class="label">Promedio % Suspendidos</div><div class="value">${promedio.toFixed(2)}%</div><div class="sub">de las ${filasActual.length} plazas con dato</div></div>
       <div class="kpi verde"><div class="icon">🥇</div><div class="label">Mejor Plaza</div><div class="value">${mejor?esc(prettyPlaza(mejor.plaza)):'—'}</div><div class="sub">${mejor?mejor.pct.toFixed(2)+'%':''}</div></div>
       <div class="kpi rojo"><div class="icon">🚨</div><div class="label">Peor Plaza</div><div class="value">${peor?esc(prettyPlaza(peor.plaza)):'—'}</div><div class="sub">${peor?peor.pct.toFixed(2)+'%':''}</div></div>
