@@ -471,6 +471,7 @@ async function cargarDatosPublicos(){
   DATA.registros = registros;
   DATA.semanas = [...new Set(registros.map(r=>r.s))].sort((a,b)=>a-b);
   DATA.coaches = [...new Set(registros.map(r=>r.co).filter(Boolean))].sort();
+  if(registros.some(r=>!r.co)) DATA.coaches.push('(Sin coach)');
   DATA.analistas = [...new Set(registros.map(r=>r.a).filter(Boolean))].sort();
   DATA.clusters = [...new Set(registros.map(r=>r.cl).filter(Boolean))].sort();
   DATA.canales = [...new Set(registros.map(r=>r.sc).filter(Boolean))].sort();
@@ -586,7 +587,7 @@ function aplicar(){
   filtrados=DATA.registros.filter(r=>{
     if(semSel.length&&!semSel.includes(r.s))return false;
     if(clSel.length&&!clSel.includes(r.cl))return false;
-    if(coSel.length&&!coSel.includes(r.co))return false;
+    if(coSel.length&&!coSel.includes(r.co||'(Sin coach)'))return false;
     if(anSel.length&&!anSel.includes(r.a))return false;
     if(caSel.length&&!caSel.includes(r.sc))return false;
     if(plSel.length&&!plSel.includes(r.pl))return false;
