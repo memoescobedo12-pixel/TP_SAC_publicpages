@@ -1418,9 +1418,10 @@ function renderCascada(cuentas){
   CASCADA_NIVELES.forEach(nivel=>renderCascadaCol(nivel, cuentas));
 }
 
-function renderChartTRDist(cuentas){
+function renderChartTRDist(datos, esTickets){
   const el = document.getElementById('chartTRDist');
-  const rows = countBy(cuentas,'trTotal').sort((a,b)=>a[0]-b[0]);
+  const campo = esTickets ? 'tr' : 'trTotal';
+  const rows = countBy(datos,campo).sort((a,b)=>a[0]-b[0]);
   if(!rows.length){
     el.innerHTML = '<div class="vacio">Sin datos</div>';
     return;
@@ -1436,7 +1437,8 @@ function renderChartTRDist(cuentas){
     const heightPx = Math.max(n/niceMax*PLOT_H, 4);
     const t = rows.length>1 ? idx/(rows.length-1) : 1;
     const color = hexToRgba(CHART_NAVY, 0.45+0.55*t);
-    return `<div class="vbar-item" data-idx="${idx}" onclick='${onclickDrill('trMax',v,'Cuentas con '+v+' tickets en la semana')}'>
+    const etiquetaDrill = esTickets ? ('Tickets con TR '+v+' en la semana') : ('Cuentas con '+v+' tickets en la semana');
+    return `<div class="vbar-item" data-idx="${idx}" onclick='${onclickDrill('trMax',v,etiquetaDrill)}'>
       <div class="vbar-value">${n}</div>
       <div class="vbar-col" style="height:${heightPx}px;background:${color};"></div>
     </div>`;
@@ -1449,19 +1451,19 @@ function renderChartTRDist(cuentas){
       <div class="vbar-plot">${gridHtml}<div class="vbar-items">${itemsHtml}</div></div>
     </div>
     <div class="vbar-labels">${labelsHtml}</div>
-    <div class="hbar-axis-title" style="text-align:right;padding-right:10px;">Cuentas ↑</div>`;
+    <div class="hbar-axis-title" style="text-align:right;padding-right:10px;">${etiquetaUnidad(true)} ↑</div>`;
   const wrap = el.querySelector('.vbar-chart');
   wireHoverGroup(wrap, wrap.querySelectorAll('.vbar-item'));
 }
 
-function renderChartHorario(cuentas){
+function renderChartHorario(datos){
   const el = document.getElementById('chartHorario');
   const conteo = new Map();
-  cuentas.forEach(c=>{ if(c.hora!==null && c.hora!==undefined) conteo.set(c.hora, (conteo.get(c.hora)||0)+1); });
+  datos.forEach(c=>{ if(c.hora!==null && c.hora!==undefined) conteo.set(c.hora, (conteo.get(c.hora)||0)+1); });
   const rows = [];
   for(let h=0; h<24; h++) rows.push([h, conteo.get(h)||0]);
 
-  if(!cuentas.length){
+  if(!datos.length){
     el.innerHTML = '<div class="vacio">Sin datos</div>';
     return;
   }
@@ -1728,10 +1730,11 @@ function renderChartCiudad(cuentas){
   });
 }
 
-// Modos que respetan el switch Cuentas/Tickets -- el resto (trMax, trMaxMin,
-// all, cuenta, repetidosSemana, allTickets, hora) siempre es a nivel cuenta
-// o siempre a nivel ticket por su propia naturaleza, sin importar el switch.
+// Modos que respetan el switch Cuentas/Tickets -- el resto (trMaxMin, all,
+// cuenta, repetidosSemana, allTickets) siempre es a nivel cuenta o siempre a
+// nivel ticket por su propia naturaleza, sin importar el switch.
 const CASCADA_MODOS_BASE = ['cluster','ciudad','n1','n2','n3','grupo'];
+const TR_HORA_MODOS_BASE = ['trMax','hora'];
 
 function drill(mode, value, label){
   const cuentas = CURRENT_CUENTAS;
@@ -1759,12 +1762,12 @@ function drill(mode, value, label){
   else if(mode==='n2') rows = base.filter(d=>d.n2Norm===value);
   else if(mode==='n3') rows = base.filter(d=>d.n3Norm===value);
   else if(mode==='grupo') rows = base.filter(d=>d.grupoNorm===value);
-  else if(mode==='hora') rows = cuentas.filter(d=>d.hora===value);
-  else if(mode==='trMax') rows = cuentas.filter(d=>d.trTotal===value);
+  else if(mode==='hora') rows = base.filter(d=>d.hora===value);
+  else if(mode==='trMax') rows = (MODO_CONTEO==='tickets') ? base.filter(d=>d.tr===value) : cuentas.filter(d=>d.trTotal===value);
   else if(mode==='trMaxMin') rows = cuentas.filter(d=>d.trTotal>=value);
   else if(mode==='cuenta') rows = cuentas.filter(d=>String(d.cuenta)===String(value));
   else rows = [];
-  const esTicket = mode==='clusterSemana' || mode==='totalTendenciaSemana' || (MODO_CONTEO==='tickets' && CASCADA_MODOS_BASE.includes(mode));
+  const esTicket = mode==='clusterSemana' || mode==='totalTendenciaSemana' || (MODO_CONTEO==='tickets' && (CASCADA_MODOS_BASE.includes(mode) || TR_HORA_MODOS_BASE.includes(mode)));
   renderDrill(rows, label, esTicket);
 }
 
@@ -1823,8 +1826,8 @@ function render(){
   CURRENT_REPETIDOS = repetidos;
   CURRENT_FILTERED_ROWS = filteredRows;
   // CURRENT_BASE = lo que alimenta las secciones que respetan el switch
-  // Cuentas/Tickets (Cluster, Ciudad, Cascada, Grupo). El resto (KPIs,
-  // Regional, Distribucion TR, Horario) siempre usa `cuentas` (deduplicado).
+  // Cuentas/Tickets (Cluster, Ciudad, Cascada, Grupo, Distribucion TR,
+  // Horario). El resto (KPIs, Regional) siempre usa `cuentas` (deduplicado).
   CURRENT_BASE = MODO_CONTEO === 'tickets' ? filteredRows : cuentas;
   renderBanner(filteredRows);
   renderResumen(CURRENT_BASE, cuentas);
@@ -1834,8 +1837,8 @@ function render(){
   renderChartCiudad(CURRENT_BASE);
   renderCascada(CURRENT_BASE);
   renderChartGrupo(CURRENT_BASE);
-  renderChartTRDist(cuentas);
-  renderChartHorario(cuentas);
+  renderChartTRDist(CURRENT_BASE, MODO_CONTEO==='tickets');
+  renderChartHorario(CURRENT_BASE);
   renderTendenciaCluster(getFiltros().ciudades);
   closeDrill();
 }
