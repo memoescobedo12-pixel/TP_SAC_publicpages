@@ -639,6 +639,7 @@ function cambiarModoConteo(modo){
 }
 let CURRENT_REPETIDOS = [];
 let CURRENT_FILTERED_ROWS = [];
+let CURRENT_CUENTAS_VIGENTES = [];
 let RESUMEN_OCULTO = false;
 
 function hexToRgba(hex, alpha){
@@ -941,7 +942,9 @@ function renderResumen(base, cuentasFijas){
       `<b>${pctTp}%</b> de los casos con dato fue atribuible a Totalplay (${tp} de ${conImputable.length}).`));
   }
 
-  // Reincidencia siempre es por cuenta (Repetido60 no aplica a nivel ticket)
+  // Reincidencia siempre es por cuenta (Repetido60 no aplica a nivel ticket).
+  // cuentasFijas aqui ya es el set "vigentes a la fecha de corte" (ver
+  // cuentasVigentesRepetido60), no solo las que tuvieron ticket esta semana.
   const con4mas = cuentasFijas.filter(c=>c.repetido60>=4).length;
   cuadros.push(cuadroResumen('🔁 Reincidencia', CHART_PURPLE,
     `<b>${con4mas}</b> cuenta${con4mas===1?'':'s'} (${(con4mas/cuentasFijas.length*100).toFixed(1)}%) tuvo 4 o más repeticiones en 60 días.`));
@@ -975,10 +978,14 @@ function baseClientesPNM(f){
   return {valor: row.base_usuarios, label: `(más reciente de la selección: semana ${String(row.semana).padStart(2,'0')})`};
 }
 
-function renderKPIs(cuentas, totalTickets, repetidos){
+function renderKPIs(cuentas, totalTickets, repetidos, cuentasVigentes){
   const f = getFiltros();
   const total = cuentas.length;
-  const con4mas = cuentas.filter(c=>c.repetido60>=4);
+  // "Cuentas con 4+ Repeticiones" usa cuentasVigentes (vigentes a la fecha de
+  // corte, no solo las que tuvieron ticket esta semana especifica -- ver
+  // cuentasVigentesRepetido60) -- por eso el % es sobre cuentasVigentes.length,
+  // no sobre total (que es el volumen de la semana filtrada).
+  const con4mas = cuentasVigentes.filter(c=>c.repetido60>=4);
   const periodoLabel = etiquetaPeriodo(f) + (f.desde||f.hasta ? ` · ${f.desde||'…'} a ${f.hasta||'…'}` : '');
   const porCluster = countBy(cuentas,'clusterNorm');
   const base = baseClientesPNM(f);
@@ -1001,7 +1008,7 @@ function renderKPIs(cuentas, totalTickets, repetidos){
       <div class="icon">⚠️</div>
       <div class="label">Cuentas con 4+ Repeticiones</div>
       <div class="value clickable" onclick='${onclickDrill('repMaxMin',4,'Cuentas con 4+ repeticiones')}'>${con4mas.length}</div>
-      <div class="sub">${total ? (con4mas.length/total*100).toFixed(1) : '0'}% del total</div>
+      <div class="sub">${cuentasVigentes.length ? (con4mas.length/cuentasVigentes.length*100).toFixed(1) : '0'}% del total</div>
     </div>
   `;
 
@@ -1745,8 +1752,8 @@ function drill(mode, value, label){
     });
   }
   else if(mode==='descripcionOtras') rows = base.filter(d=>!value.includes(d.descNorm)).sort((a,b)=>(a.descNorm||'').localeCompare(b.descNorm||''));
-  else if(mode==='repMax') rows = cuentas.filter(d=>d.repetido60===value);
-  else if(mode==='repMaxMin') rows = cuentas.filter(d=>d.repetido60>=value);
+  else if(mode==='repMax') rows = CURRENT_CUENTAS_VIGENTES.filter(d=>d.repetido60===value);
+  else if(mode==='repMaxMin') rows = CURRENT_CUENTAS_VIGENTES.filter(d=>d.repetido60>=value);
   else if(mode==='cuenta') rows = cuentas.filter(d=>String(d.cuenta)===String(value));
   else rows = [];
   const esTicket = mode==='clusterSemana' || (MODO_CONTEO==='tickets' && CASCADA_MODOS_BASE.includes(mode));
@@ -1802,21 +1809,77 @@ function closeDrill(){
   document.getElementById('drillPanel').style.display = 'none';
 }
 
+// Cuentas "vigentes" a la fecha de corte del filtro actual, para las
+// metricas de reincidencia (Distribucion Repetido60, KPI "Cuentas con 4+
+// Repeticiones", texto de Reincidencia) -- a diferencia de `cuentas` (que
+// solo trae cuentas con ticket NUEVO dentro del filtro), esto agarra el
+// ticket mas reciente de cada cuenta en TODO el historico hasta la fecha de
+// corte, y la incluye si ese ticket sigue dentro de la ventana de 60 dias.
+// Asi no se pierden cuentas que ya acumularon repeticiones en semanas
+// anteriores pero no volvieron a generar ticket justo en la semana filtrada.
+// Decision de Memo (2026-09-01): Total Tickets/Total Cuentas SI se quedan
+// como volumen puro de la semana filtrada, sin este ajuste.
+function cuentasVigentesRepetido60(filteredRows){
+  const conFecha = filteredRows.filter(r=>r.fechaTS!==null);
+  if(!conFecha.length) return [];
+  const cutoffTS = Math.max(...conFecha.map(r=>r.fechaTS));
+  const SEG_60D = 60*24*3600;
+
+  const f = getFiltros();
+  let clustersPermitidos = null;
+  if(f.ciudades.length){
+    clustersPermitidos = new Set();
+    f.ciudades.forEach(id=>{ (CIUDAD_CLUSTERS[id]?.clusters||[]).forEach(c=>clustersPermitidos.add(c)); });
+  }
+  if(f.clusters.length){
+    const soloClusters = new Set(f.clusters);
+    clustersPermitidos = clustersPermitidos ? new Set([...clustersPermitidos].filter(c=>soloClusters.has(c))) : soloClusters;
+  }
+
+  // Recontar DESDE CERO cuantos tickets caen en (cutoff-60d, cutoff] por
+  // cuenta -- NO usar el `repetido60` ya guardado en el ticket, porque ese
+  // valor quedo fijo a la fecha de ESE ticket (cuando el sistema lo calculo
+  // la primera vez), no a la fecha de corte actual. Usarlo tal cual
+  // sobre-cuenta cuentas cuya racha ya "prescribio" para hoy (parte de sus
+  // tickets viejos ya cayeron fuera de la ventana de 60 dias vista desde el
+  // corte, aunque seguian dentro vistos desde la fecha de su propio ticket).
+  const ticketsPorCuenta = new Map();
+  for(const r of HIST){
+    if(r.fechaTS===null) continue;
+    const edadSeg = cutoffTS-r.fechaTS;
+    if(edadSeg<0 || edadSeg>SEG_60D) continue;
+    if(clustersPermitidos && !clustersPermitidos.has(r.clusterNorm)) continue;
+    if(!ticketsPorCuenta.has(r.cuenta)) ticketsPorCuenta.set(r.cuenta, []);
+    ticketsPorCuenta.get(r.cuenta).push(r);
+  }
+
+  const vigentes = [];
+  for(const tickets of ticketsPorCuenta.values()){
+    const masReciente = tickets.reduce((a,b)=>b.fechaTS>a.fechaTS?b:a);
+    // Clon superficial con el conteo FRESCO como repetido60 (sin mutar HIST).
+    vigentes.push(Object.assign({}, masReciente, {repetido60: tickets.length}));
+  }
+  return vigentes;
+}
+
 function render(){
   const filteredRows = aplicarFiltros();
   const ticketCounts = contarTicketsPorCuenta(filteredRows);
   const cuentas = dedupCuentas(filteredRows);
   const repetidos = cuentas.filter(c => ticketCounts.get(c.semana+'_'+c.cuenta) > 1);
+  const cuentasVigentes = cuentasVigentesRepetido60(filteredRows);
   CURRENT_CUENTAS = cuentas;
+  CURRENT_CUENTAS_VIGENTES = cuentasVigentes;
   CURRENT_REPETIDOS = repetidos;
   CURRENT_FILTERED_ROWS = filteredRows;
   // CURRENT_BASE = lo que alimenta las secciones que respetan el switch
   // Cuentas/Tickets (Cluster, Cascada, Imputable, Colonias, OLT). El resto
-  // (KPIs, Regional, Repetido60) siempre usa `cuentas` (deduplicado).
+  // (KPIs, Regional, Repetido60) siempre usa `cuentas` (deduplicado) o
+  // `cuentasVigentes` (reincidencia).
   CURRENT_BASE = MODO_CONTEO === 'tickets' ? filteredRows : cuentas;
   renderBanner(filteredRows);
-  renderResumen(CURRENT_BASE, cuentas);
-  renderKPIs(cuentas, filteredRows.length, repetidos);
+  renderResumen(CURRENT_BASE, cuentasVigentes);
+  renderKPIs(cuentas, filteredRows.length, repetidos, cuentasVigentes);
   renderRegional();
   renderChartCluster(CURRENT_BASE);
   renderChartCiudad(CURRENT_BASE);
@@ -1824,7 +1887,7 @@ function render(){
   renderChartImputable(CURRENT_BASE);
   renderChartColonia(CURRENT_BASE);
   renderChartOlt(CURRENT_BASE);
-  renderChartRepDist(cuentas);
+  renderChartRepDist(cuentasVigentes);
   renderTendenciaCluster(getFiltros().ciudades);
   closeDrill();
 }
