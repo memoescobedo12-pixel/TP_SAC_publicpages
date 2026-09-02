@@ -1809,56 +1809,17 @@ function closeDrill(){
   document.getElementById('drillPanel').style.display = 'none';
 }
 
-// Cuentas "vigentes" a la fecha de corte del filtro actual, para las
-// metricas de reincidencia (Distribucion Repetido60, KPI "Cuentas con 4+
-// Repeticiones", texto de Reincidencia) -- a diferencia de `cuentas` (que
-// solo trae cuentas con ticket NUEVO dentro del filtro), esto agarra el
-// ticket mas reciente de cada cuenta en TODO el historico hasta la fecha de
-// corte, y la incluye si ese ticket sigue dentro de la ventana de 60 dias.
-// Asi no se pierden cuentas que ya acumularon repeticiones en semanas
-// anteriores pero no volvieron a generar ticket justo en la semana filtrada.
-// Decision de Memo (2026-09-01): Total Tickets/Total Cuentas SI se quedan
-// como volumen puro de la semana filtrada, sin este ajuste.
-//
-// El numero de Repetido60 mostrado es el que YA trae el ticket mas reciente
-// de la cuenta (campo original del Excel, ya corregido en semanas rotas por
-// rr_historico_build.py) -- decision de Memo (2026-09-02): el dashboard
-// debe replicar EXACTO el patron de la tabla RR origen, no recontar con su
-// propia ventana (eso fue lo que causaba que quedara 1 por debajo de lo
-// real -- ver reconstruir_repetido60() en rr_historico_build.py).
+// Cuentas para las metricas de reincidencia (Distribucion Repetido60, KPI
+// "Cuentas con 4+ Repeticiones", texto de Reincidencia) -- decision de Memo
+// (2026-09-02): deben ser EXACTAMENTE las cuentas del filtro actual (la
+// misma base que `cuentas`, deduplicada por semana+cuenta), ni mas ni
+// menos -- para que sumen igual que la tabla RR origen (56 tickets / 53
+// cuentas en semana 34), no una ventana de 60 dias hacia atras en todo el
+// historico. El numero de Repetido60 de cada una ya viene correcto en el
+// dato (campo original del Excel, ya corregido en semanas rotas por
+// rr_historico_build.py) -- no se recalcula aqui.
 function cuentasVigentesRepetido60(filteredRows){
-  const conFecha = filteredRows.filter(r=>r.fechaTS!==null);
-  if(!conFecha.length) return [];
-  const cutoffTS = Math.max(...conFecha.map(r=>r.fechaTS));
-  const SEG_60D = 60*24*3600;
-
-  const f = getFiltros();
-  let clustersPermitidos = null;
-  if(f.ciudades.length){
-    clustersPermitidos = new Set();
-    f.ciudades.forEach(id=>{ (CIUDAD_CLUSTERS[id]?.clusters||[]).forEach(c=>clustersPermitidos.add(c)); });
-  }
-  if(f.clusters.length){
-    const soloClusters = new Set(f.clusters);
-    clustersPermitidos = clustersPermitidos ? new Set([...clustersPermitidos].filter(c=>soloClusters.has(c))) : soloClusters;
-  }
-
-  const ticketsPorCuenta = new Map();
-  for(const r of HIST){
-    if(r.fechaTS===null) continue;
-    const edadSeg = cutoffTS-r.fechaTS;
-    if(edadSeg<0 || edadSeg>SEG_60D) continue;
-    if(clustersPermitidos && !clustersPermitidos.has(r.clusterNorm)) continue;
-    if(!ticketsPorCuenta.has(r.cuenta)) ticketsPorCuenta.set(r.cuenta, []);
-    ticketsPorCuenta.get(r.cuenta).push(r);
-  }
-
-  const vigentes = [];
-  for(const tickets of ticketsPorCuenta.values()){
-    const masReciente = tickets.reduce((a,b)=>b.fechaTS>a.fechaTS?b:a);
-    vigentes.push(masReciente);
-  }
-  return vigentes;
+  return dedupCuentas(filteredRows);
 }
 
 function render(){
