@@ -640,6 +640,7 @@ function cambiarModoConteo(modo){
 let CURRENT_REPETIDOS = [];
 let CURRENT_FILTERED_ROWS = [];
 let CURRENT_CUENTAS_VIGENTES = [];
+let CURRENT_TICKETS_REPETIDO60 = [];
 let RESUMEN_OCULTO = false;
 
 function hexToRgba(hex, alpha){
@@ -1402,9 +1403,9 @@ function renderChartColonia(cuentas){
   renderHBar('chartColonia', items, CHART_GOLD, unidad, 'chartColonia');
 }
 
-function renderChartRepDist(cuentas){
+function renderChartRepDist(tickets){
   const el = document.getElementById('chartRepDist');
-  const rows = countBy(cuentas,'repetido60').sort((a,b)=>a[0]-b[0]);
+  const rows = countBy(tickets,'repetido60').sort((a,b)=>a[0]-b[0]);
   if(!rows.length){
     el.innerHTML = '<div class="vacio">Sin datos</div>';
     return;
@@ -1420,7 +1421,7 @@ function renderChartRepDist(cuentas){
     const heightPx = Math.max(n/niceMax*PLOT_H, 4);
     const t = rows.length>1 ? idx/(rows.length-1) : 1;
     const color = hexToRgba(CHART_NAVY, 0.45+0.55*t);
-    return `<div class="vbar-item" data-idx="${idx}" onclick='${onclickDrill('repMax',v,'Cuentas con '+v+' repeticiones')}'>
+    return `<div class="vbar-item" data-idx="${idx}" onclick='${onclickDrill('repMax',v,'Tickets con '+v+' repeticiones')}'>
       <div class="vbar-value">${n}</div>
       <div class="vbar-col" style="height:${heightPx}px;background:${color};"></div>
     </div>`;
@@ -1718,6 +1719,11 @@ function renderChartImputable(cuentas){
 // Modos que respetan el switch Cuentas/Tickets -- el resto (repMax, repMaxMin,
 // all, cuenta, repetidosSemana, allTickets) siempre es a nivel cuenta o siempre
 // a nivel ticket por su propia naturaleza, sin importar el switch.
+// repMax (barras de Distribucion Repetido60) es SIEMPRE a nivel ticket --
+// decision de Memo (2026-09-02): esa grafica debe replicar EXACTO la tabla
+// RR origen (filas = tickets, una cuenta con 2 tickets la misma semana
+// cuenta 2 veces). repMaxMin (KPI "Cuentas con 4+ Repeticiones") sigue
+// siendo a nivel cuenta -- el KPI literalmente dice "cuentas".
 const CASCADA_MODOS_BASE = ['cluster','ciudad','falla','causa','solucion','descripcion','imputable','imputableSinDato','olt','colonia','coloniaOtras','descripcionOtras'];
 
 function drill(mode, value, label){
@@ -1752,11 +1758,11 @@ function drill(mode, value, label){
     });
   }
   else if(mode==='descripcionOtras') rows = base.filter(d=>!value.includes(d.descNorm)).sort((a,b)=>(a.descNorm||'').localeCompare(b.descNorm||''));
-  else if(mode==='repMax') rows = CURRENT_CUENTAS_VIGENTES.filter(d=>d.repetido60===value);
+  else if(mode==='repMax') rows = CURRENT_TICKETS_REPETIDO60.filter(d=>d.repetido60===value);
   else if(mode==='repMaxMin') rows = CURRENT_CUENTAS_VIGENTES.filter(d=>d.repetido60>=value);
   else if(mode==='cuenta') rows = cuentas.filter(d=>String(d.cuenta)===String(value));
   else rows = [];
-  const esTicket = mode==='clusterSemana' || (MODO_CONTEO==='tickets' && CASCADA_MODOS_BASE.includes(mode));
+  const esTicket = mode==='clusterSemana' || mode==='repMax' || (MODO_CONTEO==='tickets' && CASCADA_MODOS_BASE.includes(mode));
   renderDrill(rows, label, esTicket);
 }
 
@@ -1830,12 +1836,15 @@ function render(){
   const cuentasVigentes = cuentasVigentesRepetido60(filteredRows);
   CURRENT_CUENTAS = cuentas;
   CURRENT_CUENTAS_VIGENTES = cuentasVigentes;
+  CURRENT_TICKETS_REPETIDO60 = filteredRows;
   CURRENT_REPETIDOS = repetidos;
   CURRENT_FILTERED_ROWS = filteredRows;
   // CURRENT_BASE = lo que alimenta las secciones que respetan el switch
   // Cuentas/Tickets (Cluster, Cascada, Imputable, Colonias, OLT). El resto
-  // (KPIs, Regional, Repetido60) siempre usa `cuentas` (deduplicado) o
-  // `cuentasVigentes` (reincidencia).
+  // (KPIs, Regional) usa `cuentas` (deduplicado) o `cuentasVigentes`
+  // (KPI "Cuentas con 4+", texto Reincidencia). La grafica Distribucion
+  // Repetido60 usa `filteredRows` sin deduplicar (nivel ticket, igual que
+  // la tabla RR origen) -- decision de Memo (2026-09-02).
   CURRENT_BASE = MODO_CONTEO === 'tickets' ? filteredRows : cuentas;
   renderBanner(filteredRows);
   renderResumen(CURRENT_BASE, cuentasVigentes);
@@ -1847,7 +1856,7 @@ function render(){
   renderChartImputable(CURRENT_BASE);
   renderChartColonia(CURRENT_BASE);
   renderChartOlt(CURRENT_BASE);
-  renderChartRepDist(cuentasVigentes);
+  renderChartRepDist(filteredRows);
   renderTendenciaCluster(getFiltros().ciudades);
   closeDrill();
 }
