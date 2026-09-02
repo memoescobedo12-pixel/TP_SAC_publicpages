@@ -1819,6 +1819,13 @@ function closeDrill(){
 // anteriores pero no volvieron a generar ticket justo en la semana filtrada.
 // Decision de Memo (2026-09-01): Total Tickets/Total Cuentas SI se quedan
 // como volumen puro de la semana filtrada, sin este ajuste.
+//
+// El numero de Repetido60 mostrado es el que YA trae el ticket mas reciente
+// de la cuenta (campo original del Excel, ya corregido en semanas rotas por
+// rr_historico_build.py) -- decision de Memo (2026-09-02): el dashboard
+// debe replicar EXACTO el patron de la tabla RR origen, no recontar con su
+// propia ventana (eso fue lo que causaba que quedara 1 por debajo de lo
+// real -- ver reconstruir_repetido60() en rr_historico_build.py).
 function cuentasVigentesRepetido60(filteredRows){
   const conFecha = filteredRows.filter(r=>r.fechaTS!==null);
   if(!conFecha.length) return [];
@@ -1836,13 +1843,6 @@ function cuentasVigentesRepetido60(filteredRows){
     clustersPermitidos = clustersPermitidos ? new Set([...clustersPermitidos].filter(c=>soloClusters.has(c))) : soloClusters;
   }
 
-  // Recontar DESDE CERO cuantos tickets caen en (cutoff-60d, cutoff] por
-  // cuenta -- NO usar el `repetido60` ya guardado en el ticket, porque ese
-  // valor quedo fijo a la fecha de ESE ticket (cuando el sistema lo calculo
-  // la primera vez), no a la fecha de corte actual. Usarlo tal cual
-  // sobre-cuenta cuentas cuya racha ya "prescribio" para hoy (parte de sus
-  // tickets viejos ya cayeron fuera de la ventana de 60 dias vista desde el
-  // corte, aunque seguian dentro vistos desde la fecha de su propio ticket).
   const ticketsPorCuenta = new Map();
   for(const r of HIST){
     if(r.fechaTS===null) continue;
@@ -1856,8 +1856,7 @@ function cuentasVigentesRepetido60(filteredRows){
   const vigentes = [];
   for(const tickets of ticketsPorCuenta.values()){
     const masReciente = tickets.reduce((a,b)=>b.fechaTS>a.fechaTS?b:a);
-    // Clon superficial con el conteo FRESCO como repetido60 (sin mutar HIST).
-    vigentes.push(Object.assign({}, masReciente, {repetido60: tickets.length}));
+    vigentes.push(masReciente);
   }
   return vigentes;
 }
