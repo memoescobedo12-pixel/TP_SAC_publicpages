@@ -56,6 +56,7 @@
   .own{background:#fff3b0;font-weight:700;}
 
   .estado{padding:40px;text-align:center;color:#666;font-size:13px;}
+  .hallazgo{background:#eef6ff;border-left:4px solid var(--blue);border-radius:8px;padding:9px 14px;margin-bottom:10px;font-size:11.5px;color:#0a3d66;line-height:1.5;}
 </style>
 </head>
 <body>
@@ -87,12 +88,114 @@ function lugarEnSemana(hist, plaza, semana){
   return idx === -1 ? null : idx + 1;
 }
 
+const RANGE_CLUSTER = "'Cluster'!A2:E5000";
+function filaClusterSemana(hist, cluster, semana){
+  return hist.find(r => r.cluster === cluster && r.semana === semana) || null;
+}
+function lugarClusterEnSemana(hist, cluster, semana){
+  const filas = hist.filter(r => r.semana === semana).sort((a,b) => b.pct - a.pct);
+  const idx = filas.findIndex(r => r.cluster === cluster);
+  return idx === -1 ? null : idx + 1;
+}
+
+function renderSeccionCluster(histCluster){
+  if(!histCluster.length) return '';
+  const semanas = [...new Set(histCluster.map(r => r.semana))].sort((a,b) => a-b);
+  const semActual = semanas[semanas.length - 1];
+  const semAnterior = semanas.length > 1 ? semanas[semanas.length - 2] : null;
+  const clusters = [...new Set(histCluster.map(r => r.cluster))];
+
+  const filas = clusters.map(cluster => {
+    const actual = filaClusterSemana(histCluster, cluster, semActual);
+    const anterior = semAnterior !== null ? filaClusterSemana(histCluster, cluster, semAnterior) : null;
+    const lugarActual = actual ? lugarClusterEnSemana(histCluster, cluster, semActual) : null;
+    const lugarAnterior = anterior ? lugarClusterEnSemana(histCluster, cluster, semAnterior) : null;
+    return {cluster, actual, anterior, lugarActual, lugarAnterior};
+  }).filter(f => f.actual).sort((a,b) => a.lugarActual - b.lugarActual);
+
+  const filasHtml = filas.map(f => {
+    const pctAnt = f.anterior ? f.anterior.pct.toFixed(2) + '%' : '<span class="sindato">sin dato</span>';
+    let dPtsHtml = '—';
+    if(f.anterior){
+      const d = f.actual.pct - f.anterior.pct;
+      dPtsHtml = `<span class="${d>0?'up':(d<0?'down':'flat')}">${d>0?'▲':(d<0?'▼':'—')} ${Math.abs(d).toFixed(2)}</span>`;
+    }
+    let dLugarHtml = '—';
+    if(f.lugarAnterior !== null){
+      const dL = f.lugarActual - f.lugarAnterior;
+      dLugarHtml = dL === 0 ? '<span class="flat">— 0</span>' : (dL > 0 ? `<span class="down">▼ +${dL}</span>` : `<span class="up">▲ ${dL}</span>`);
+    }
+    return `<tr><td>#${f.lugarActual}</td><td>${esc(f.cluster)}</td><td class="num">${pctAnt}</td><td class="num">${f.actual.pct.toFixed(2)}%</td><td class="num">${dPtsHtml}</td><td class="num">${dLugarHtml}</td></tr>`;
+  }).join('');
+
+  let filaMejoraronHtml = '<tr><td colspan="4" class="sindato">Aún no hay historial suficiente para comparar (primera semana registrada).</td></tr>';
+  let filaEmpeoraronHtml = filaMejoraronHtml;
+  if(semAnterior !== null){
+    const movimientos = clusters.map(cluster => {
+      const a = filaClusterSemana(histCluster, cluster, semActual);
+      const b = filaClusterSemana(histCluster, cluster, semAnterior);
+      if(!a || !b) return null;
+      return {cluster, anterior: b.pct, actual: a.pct, delta: a.pct - b.pct};
+    }).filter(Boolean);
+    const mejoraron = movimientos.filter(m => m.delta < 0).sort((a,b) => a.delta - b.delta);
+    const empeoraron = movimientos.filter(m => m.delta > 0).sort((a,b) => b.delta - a.delta);
+    const filaMov = m => `<tr><td>${esc(m.cluster)}</td><td class="num">${m.anterior.toFixed(2)}%</td><td class="num">${m.actual.toFixed(2)}%</td><td class="num ${m.delta<0?'down':'up'}">${m.delta>0?'+':''}${m.delta.toFixed(2)}</td></tr>`;
+    filaMejoraronHtml = mejoraron.map(filaMov).join('') || '<tr><td colspan="4" class="sindato">Sin clusters con mejora esta semana.</td></tr>';
+    filaEmpeoraronHtml = empeoraron.map(filaMov).join('') || '<tr><td colspan="4" class="sindato">Sin clusters con retroceso esta semana.</td></tr>';
+  }
+
+  const peorPct = filas.length ? filas.reduce((a,b) => a.actual.pct > b.actual.pct ? a : b) : null;
+  const peorVolumen = filas.length ? filas.reduce((a,b) => a.actual.susp > b.actual.susp ? a : b) : null;
+  let hallazgoHtml = '';
+  if(peorPct && peorVolumen && peorPct.cluster !== peorVolumen.cluster){
+    hallazgoHtml = `<div class="hallazgo">🔎 Hallazgo: el cluster con % más alto es <b>${esc(peorPct.cluster)}</b> (${peorPct.actual.pct.toFixed(2)}%), pero el que más cuentas suspendidas aporta es <b>${esc(peorVolumen.cluster)}</b> (${peorVolumen.actual.susp} cuentas).</div>`;
+  }
+
+  const headTxt = semAnterior !== null
+    ? `🏘️ Comparativa por Cluster — Semana ${semActual} vs Semana ${semAnterior}`
+    : `🏘️ Comparativa por Cluster — Semana ${semActual} (primera semana registrada)`;
+  const thAnt = semAnterior !== null ? `% Sem ${semAnterior}` : '% Sem anterior';
+
+  return `
+    <div class="section" id="seccion-cluster">
+      <div class="sec-head">${headTxt}</div>
+      <div class="sec-body">
+        ${hallazgoHtml}
+        <table>
+          <thead><tr><th>Lugar</th><th>Cluster</th><th class="num">${thAnt}</th><th class="num">% Sem ${semActual}</th><th class="num">Δ pts</th><th class="num">Δ Lugar</th></tr></thead>
+          <tbody>${filasHtml}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head red">⚠️ Clusters que Empeoraron</div>
+      <div class="sec-body"><table><thead><tr><th>Cluster</th><th class="num">Anterior</th><th class="num">Actual</th><th class="num">Δ pts</th></tr></thead><tbody>${filaEmpeoraronHtml}</tbody></table></div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head green">✅ Clusters que Mejoraron</div>
+      <div class="sec-body"><table><thead><tr><th>Cluster</th><th class="num">Anterior</th><th class="num">Actual</th><th class="num">Δ pts</th></tr></thead><tbody>${filaMejoraronHtml}</tbody></table></div>
+    </div>
+  `;
+}
+
 async function cargar(){
   const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + SPREADSHEET_ID +
     '/values/' + encodeURIComponent(RANGE) + '?key=' + API_KEY;
-  const resp = await fetch(url);
+  const urlCluster = 'https://sheets.googleapis.com/v4/spreadsheets/' + SPREADSHEET_ID +
+    '/values/' + encodeURIComponent(RANGE_CLUSTER) + '?key=' + API_KEY;
+  const [resp, respCluster] = await Promise.all([fetch(url), fetch(urlCluster)]);
   if(!resp.ok) throw new Error('No se pudo cargar la información (HTTP ' + resp.status + ')');
   const data = await resp.json();
+  const dataCluster = respCluster.ok ? await respCluster.json() : {values: []};
+  const histCluster = (dataCluster.values || []).map(r => ({
+    semana: parseInt(r[0], 10),
+    cluster: r[1],
+    base: parseInt(r[2], 10),
+    susp: parseInt(r[3], 10),
+    pct: parseFloat(r[4]),
+  }));
   const rows = data.values || [];
   if(rows.length === 0){
     document.getElementById('app').innerHTML = '<div class="estado">Todavía no hay datos cargados.</div>';
@@ -192,6 +295,8 @@ async function cargar(){
       <div class="sec-head green">✅ Top Mejoraron</div>
       <div class="sec-body"><table><thead><tr><th>Plaza</th><th class="num">Sem ${semAnterior}</th><th class="num">Sem ${semActual}</th><th class="num">Δ pts</th></tr></thead><tbody>${mejoraron.map(filaMov).join('') || '<tr><td colspan="4" class="sindato">Sin movimientos.</td></tr>'}</tbody></table></div>
     </div>
+
+    ${renderSeccionCluster(histCluster)}
   `;
 
   document.getElementById('app').innerHTML = html;
