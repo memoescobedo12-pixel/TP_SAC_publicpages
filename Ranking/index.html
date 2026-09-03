@@ -77,6 +77,7 @@ const PLAZAS_HABITUALES = [
 const ACENTOS_PLAZA = {"Leon":"León"};
 function prettyPlaza(n){ return ACENTOS_PLAZA[n] || n; }
 function esc(s){ return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtNum(n){ return n.toLocaleString('es-MX'); }
 
 function filaPlazaSemana(hist, plaza, semana){
   return hist.find(r => r.plaza === plaza && r.semana === semana) || null;
@@ -125,7 +126,7 @@ function renderSeccionCluster(histCluster){
       const dL = f.lugarActual - f.lugarAnterior;
       dLugarHtml = dL === 0 ? '<span class="flat">— 0</span>' : (dL > 0 ? `<span class="down">▼ +${dL}</span>` : `<span class="up">▲ ${dL}</span>`);
     }
-    return `<tr><td>#${f.lugarActual}</td><td>${esc(f.cluster)}</td><td class="num">${pctAnt}</td><td class="num">${f.actual.pct.toFixed(2)}%</td><td class="num">${dPtsHtml}</td><td class="num">${dLugarHtml}</td></tr>`;
+    return `<tr><td>#${f.lugarActual}</td><td>${esc(f.cluster)}</td><td class="num">${fmtNum(f.actual.base)}</td><td class="num">${pctAnt}</td><td class="num">${f.actual.pct.toFixed(2)}%</td><td class="num">${dPtsHtml}</td><td class="num">${dLugarHtml}</td></tr>`;
   }).join('');
 
   let filaMejoraronHtml = '<tr><td colspan="4" class="sindato">Aún no hay historial suficiente para comparar (primera semana registrada).</td></tr>';
@@ -162,7 +163,7 @@ function renderSeccionCluster(histCluster){
       <div class="sec-body">
         ${hallazgoHtml}
         <table>
-          <thead><tr><th>Lugar</th><th>Cluster</th><th class="num">${thAnt}</th><th class="num">% Sem ${semActual}</th><th class="num">Δ pts</th><th class="num">Δ Lugar</th></tr></thead>
+          <thead><tr><th>Lugar</th><th>Cluster</th><th class="num">Clientes</th><th class="num">${thAnt}</th><th class="num">% Sem ${semActual}</th><th class="num">Δ pts</th><th class="num">Δ Lugar</th></tr></thead>
           <tbody>${filasHtml}</tbody>
         </table>
       </div>
@@ -235,7 +236,7 @@ async function cargar(){
 
   const filasComparativaHtml = comparativa.map(f => {
     if(!f.actual){
-      return `<tr><td>—</td><td>${esc(prettyPlaza(f.plaza))}</td><td class="num sindato">sin dato</td><td class="num sindato">sin dato</td><td class="num">—</td><td class="num">—</td></tr>`;
+      return `<tr><td>—</td><td>${esc(prettyPlaza(f.plaza))}</td><td class="num sindato">sin dato</td><td class="num sindato">sin dato</td><td class="num sindato">sin dato</td><td class="num">—</td><td class="num">—</td></tr>`;
     }
     const own = f.plaza === 'Piedras Negras / Monclova' ? ' class="own"' : '';
     const pctAnt = f.anterior ? f.anterior.pct.toFixed(2) + '%' : '<span class="sindato">sin dato</span>';
@@ -249,7 +250,7 @@ async function cargar(){
       const dL = f.lugarActual - f.lugarAnterior; // positivo = subio numero = bueno
       dLugarHtml = dL === 0 ? '<span class="flat">— 0</span>' : (dL > 0 ? `<span class="down">▼ +${dL}</span>` : `<span class="up">▲ ${dL}</span>`);
     }
-    return `<tr${own}><td>#${f.lugarActual}</td><td>${esc(prettyPlaza(f.plaza))}</td><td class="num">${pctAnt}</td><td class="num">${f.actual.pct.toFixed(2)}%</td><td class="num">${dPtsHtml}</td><td class="num">${dLugarHtml}</td></tr>`;
+    return `<tr${own}><td>#${f.lugarActual}</td><td>${esc(prettyPlaza(f.plaza))}</td><td class="num">${fmtNum(f.actual.base)}</td><td class="num">${pctAnt}</td><td class="num">${f.actual.pct.toFixed(2)}%</td><td class="num">${dPtsHtml}</td><td class="num">${dLugarHtml}</td></tr>`;
   }).join('');
 
   // Mejoraron / Empeoraron
@@ -280,7 +281,7 @@ async function cargar(){
       <div class="sec-head">📊 Comparativa — Semana ${semActual} vs Semana ${semAnterior}</div>
       <div class="sec-body">
         <table>
-          <thead><tr><th>Lugar</th><th>Plaza</th><th class="num">% Sem ${semAnterior}</th><th class="num">% Sem ${semActual}</th><th class="num">Δ pts</th><th class="num">Δ Lugar</th></tr></thead>
+          <thead><tr><th>Lugar</th><th>Plaza</th><th class="num">Clientes</th><th class="num">% Sem ${semAnterior}</th><th class="num">% Sem ${semActual}</th><th class="num">Δ pts</th><th class="num">Δ Lugar</th></tr></thead>
           <tbody>${filasComparativaHtml}</tbody>
         </table>
       </div>
