@@ -82,8 +82,14 @@
 <div class="main">
 
   <div class="panel-activar">
-    <p>Deja esta página abierta (aunque esté minimizada o de fondo). Al activar notificaciones, te avisará al instante — con sonido — en cuanto se detecte una cuenta candidata a RR.</p>
-    <button id="btnActivar">🔔 Activar notificaciones</button>
+    <div>
+      <p>Deja esta página abierta (aunque esté minimizada o de fondo). Al activar notificaciones, te avisará al instante — con sonido — en cuanto se detecte una cuenta candidata a RR.</p>
+      <p id="diagNotif" style="margin-top:8px;color:var(--red);"></p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button id="btnActivar">🔔 Activar notificaciones</button>
+      <button id="btnProbar" style="background:#fff;color:var(--navy);border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:13px;font-weight:600;cursor:pointer;">🔊 Probar notificación</button>
+    </div>
   </div>
 
   <div id="estado">Cargando...</div>
@@ -140,22 +146,54 @@ function sonarAlerta(){
   }catch(e){}
 }
 
-document.getElementById('btnActivar').addEventListener('click', async () => {
-  audioListo = true;
-  sonarAlerta();
-  if('Notification' in window){
-    const permiso = await Notification.requestPermission();
-    notifPermitido = permiso === 'granted';
-  }
+function actualizarBotonActivar(){
   const btn = document.getElementById('btnActivar');
-  if(notifPermitido){
+  const diag = document.getElementById('diagNotif');
+  if(!('Notification' in window)){
+    btn.textContent = '⚠️ Este navegador no soporta notificaciones';
+    diag.textContent = '';
+    return;
+  }
+  if(Notification.permission === 'granted'){
+    notifPermitido = true;
     btn.textContent = '🔔 Notificaciones activas';
     btn.classList.add('activo');
-    btn.disabled = true;
+    diag.innerHTML = 'Permiso concedido. Si aun asi no te llega la ventana emergente al detectarse un candidato, prueba el botón de abajo — puede que Windows tenga las notificaciones del navegador apagadas en Configuración → Sistema → Notificaciones.';
+  } else if(Notification.permission === 'denied'){
+    notifPermitido = false;
+    btn.textContent = '⚠️ Bloqueado — arreglar en el navegador';
+    diag.innerHTML = 'El navegador ya bloqueó el permiso antes. Dale clic al candado 🔒 junto a la dirección de esta página, busca "Notificaciones" y cambia a "Permitir", luego recarga esta página.';
   } else {
-    btn.textContent = '⚠️ Permiso no concedido — reactivar';
+    notifPermitido = false;
+    btn.textContent = '🔔 Activar notificaciones';
+    btn.classList.remove('activo');
+    diag.textContent = '';
+  }
+}
+
+document.getElementById('btnActivar').addEventListener('click', async () => {
+  audioListo = true;
+  if(!('Notification' in window)){ actualizarBotonActivar(); return; }
+  if(Notification.permission === 'denied'){ actualizarBotonActivar(); return; }
+  await Notification.requestPermission();
+  actualizarBotonActivar();
+  if(Notification.permission !== 'granted'){
+    document.getElementById('diagNotif').innerHTML =
+      'No se concedió el permiso (o el navegador no mostró el aviso). Busca un ícono de campana 🔔 o candado 🔒 en la barra de direcciones de arriba y dale "Permitir" ahí mismo, luego recarga esta página.';
   }
 });
+
+document.getElementById('btnProbar').addEventListener('click', () => {
+  audioListo = true;
+  sonarAlerta();
+  if(Notification.permission === 'granted'){
+    new Notification('Prueba de alerta RR', { body: 'Si ves esto, las notificaciones sí funcionan en esta compu.' });
+  } else {
+    alert('Todavía no tienes el permiso concedido — activa notificaciones primero (botón de arriba).');
+  }
+});
+
+actualizarBotonActivar();
 
 function fila(cols, i){ return (cols[i] ?? '').toString().trim(); }
 
