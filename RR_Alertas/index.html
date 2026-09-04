@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RR Candidatos — Alertas en vivo</title>
+<style>
+  :root{
+    --navy:#001F5B; --blue:#00AEEF; --green:#8DC63F; --red:#E8003D; --yellow:#F5A623;
+    --bg:#f4f6fb; --card:#ffffff; --text:#1c2733; --muted:#6b7686; --border:#e3e8f0;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);}
+  .header{
+    background:linear-gradient(135deg,var(--navy) 0%,#0a2d6e 100%);
+    color:#fff;padding:18px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
+  }
+  .header-title{font-size:22px;font-weight:700;}
+  .header-sub{font-size:13px;opacity:.85;margin-top:2px;}
+  .header-right{text-align:right;font-size:13px;opacity:.9;}
+  .main{padding:24px 32px;max-width:1100px;margin:0 auto;}
+
+  .panel-activar{
+    background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:18px 22px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;
+    box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+  .panel-activar p{margin:0;font-size:14px;color:var(--muted);max-width:520px;}
+  #btnActivar{
+    background:var(--blue);color:#fff;border:none;border-radius:10px;padding:12px 22px;
+    font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;
+  }
+  #btnActivar.activo{background:var(--green);}
+  #btnActivar:disabled{opacity:.7;cursor:default;}
+
+  #estado{font-size:12px;color:var(--muted);margin-bottom:14px;}
+  #estado b{color:var(--text);}
+
+  .lista{display:flex;flex-direction:column;gap:12px;}
+  .card{
+    background:var(--card);border:1px solid var(--border);border-left:5px solid var(--red);
+    border-radius:12px;padding:16px 20px;box-shadow:0 2px 8px rgba(0,0,0,.04);
+    display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;
+  }
+  .card.atendido{border-left-color:var(--green);opacity:.6;}
+  .card.nuevo{animation:resalta 2.5s ease-out 1;}
+  @keyframes resalta{0%{box-shadow:0 0 0 4px rgba(232,0,61,.35);}100%{box-shadow:0 2px 8px rgba(0,0,0,.04);}}
+
+  .badge-rr{
+    background:var(--navy);color:#fff;font-weight:700;font-size:14px;
+    padding:8px 12px;border-radius:8px;text-align:center;min-width:56px;
+  }
+  .card-detalle b{font-size:14px;}
+  .etiqueta-candidato{
+    display:inline-block;background:#fff3cd;color:#8a6400;font-size:11px;font-weight:700;
+    padding:2px 8px;border-radius:6px;margin-left:8px;letter-spacing:.3px;
+  }
+  .fila-os{font-size:13px;color:var(--muted);margin-top:4px;}
+  .fila-os code{background:#f0f2f7;padding:1px 5px;border-radius:4px;}
+  .meta{font-size:12px;color:var(--muted);margin-top:4px;}
+  .card-accion a{
+    font-size:13px;color:var(--blue);text-decoration:none;font-weight:600;white-space:nowrap;
+  }
+  .vacio{text-align:center;color:var(--muted);padding:60px 20px;font-size:14px;}
+  .link-sheet{font-size:13px;color:var(--muted);margin-top:24px;text-align:center;}
+  .link-sheet a{color:var(--blue);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">🚨 RR Candidatos — Alertas en vivo</div>
+    <div class="header-sub">Piedras Negras / Monclova · CANDIDATO RR — falta confirmar tipificación</div>
+  </div>
+  <div class="header-right">
+    <div id="fechaHoy"></div>
+    <div id="horaActualizacion"></div>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="panel-activar">
+    <p>Deja esta página abierta (aunque esté minimizada o de fondo). Al activar notificaciones, te avisará al instante — con sonido — en cuanto se detecte una cuenta candidata a RR.</p>
+    <button id="btnActivar">🔔 Activar notificaciones</button>
+  </div>
+
+  <div id="estado">Cargando...</div>
+
+  <div class="lista" id="lista"></div>
+
+  <div class="link-sheet">Bitácora completa (marcar Atendido / Comentario) → <a href="https://docs.google.com/spreadsheets/d/1Pyl_vmwMjy7PXhz8NzoK6xfZwAhW0vCb_tbL1MZtqAE/edit" target="_blank">abrir Sheet</a></div>
+
+</div>
+
+<script>
+const SHEET_ID = '1Pyl_vmwMjy7PXhz8NzoK6xfZwAhW0vCb_tbL1MZtqAE';
+const TAB = 'candidatos';
+const API_KEY = 'AIzaSyASHf7J097a_nD6sSJxZHo7kiDn_edntuc';
+const URL_SHEET = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/`
+  + encodeURIComponent(`'${TAB}'!A2:L5000`) + `?key=${API_KEY}`;
+
+const INTERVALO_MS = 30000;
+const CLAVE_VISTOS = 'rr_alertas_vistos_v1';
+
+let audioListo = false;
+let notifPermitido = false;
+
+function fechaHoyTexto(){
+  const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const d = new Date();
+  return `${d.getDate()} ${meses[d.getMonth()]} ${d.getFullYear()}`;
+}
+document.getElementById('fechaHoy').textContent = fechaHoyTexto();
+
+function cargarVistos(){
+  try{ return new Set(JSON.parse(localStorage.getItem(CLAVE_VISTOS) || '[]')); }
+  catch(e){ return new Set(); }
+}
+function guardarVistos(set){
+  try{ localStorage.setItem(CLAVE_VISTOS, JSON.stringify([...set])); }
+  catch(e){}
+}
+let vistos = cargarVistos();
+
+function sonarAlerta(){
+  if(!audioListo) return;
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0,0.18,0.36].forEach((t,i)=>{
+      const o = ctx.createOscillator(); const g = ctx.createGain();
+      o.type='sine'; o.frequency.value = i===1 ? 880 : 660;
+      g.gain.setValueAtTime(0.001, ctx.currentTime+t);
+      g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime+t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+t+0.16);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(ctx.currentTime+t); o.stop(ctx.currentTime+t+0.18);
+    });
+  }catch(e){}
+}
+
+document.getElementById('btnActivar').addEventListener('click', async () => {
+  audioListo = true;
+  sonarAlerta();
+  if('Notification' in window){
+    const permiso = await Notification.requestPermission();
+    notifPermitido = permiso === 'granted';
+  }
+  const btn = document.getElementById('btnActivar');
+  if(notifPermitido){
+    btn.textContent = '🔔 Notificaciones activas';
+    btn.classList.add('activo');
+    btn.disabled = true;
+  } else {
+    btn.textContent = '⚠️ Permiso no concedido — reactivar';
+  }
+});
+
+function fila(cols, i){ return (cols[i] ?? '').toString().trim(); }
+
+async function revisar(){
+  let filas;
+  try{
+    const resp = await fetch(URL_SHEET + '&_=' + Date.now());
+    const data = await resp.json();
+    filas = data.values || [];
+  }catch(e){
+    document.getElementById('estado').textContent = 'No se pudo consultar la hoja (revisa tu conexión).';
+    return;
+  }
+
+  const candidatos = filas.map(c => ({
+    fechaDeteccion: fila(c,0), rrN: fila(c,1), cuenta: fila(c,2),
+    osAnterior: fila(c,3), osNuevo: fila(c,4), ticket: fila(c,5),
+    fechaVisita: fila(c,6), dias: fila(c,7), subtipo: fila(c,8),
+    tipificacion: fila(c,9), atendido: fila(c,10), comentario: fila(c,11),
+  })).filter(c => c.osNuevo);
+
+  const nuevos = candidatos.filter(c => !vistos.has(c.osNuevo));
+
+  if(nuevos.length){
+    nuevos.forEach(c => {
+      if(notifPermitido){
+        new Notification('CANDIDATO RR — falta confirmar tipificación', {
+          body: `${c.rrN} · Cuenta ${c.cuenta}\n${c.osAnterior} → ${c.osNuevo} (${c.dias} días)`,
+          tag: c.osNuevo,
+        });
+      }
+      vistos.add(c.osNuevo);
+    });
+    sonarAlerta();
+    guardarVistos(vistos);
+  }
+
+  candidatos.sort((a,b) => (b.fechaDeteccion || '').localeCompare(a.fechaDeteccion || ''));
+
+  const lista = document.getElementById('lista');
+  if(!candidatos.length){
+    lista.innerHTML = '<div class="vacio">Sin candidatos detectados por ahora. Esta página se actualiza sola cada 30 segundos.</div>';
+  } else {
+    lista.innerHTML = candidatos.map(c => {
+      const esAtendido = /^(s[ií]|si|x|ok|atendido)/i.test(c.atendido);
+      const esNuevo = nuevos.some(n => n.osNuevo === c.osNuevo);
+      return `<div class="card ${esAtendido ? 'atendido':''} ${esNuevo ? 'nuevo':''}">
+        <div class="badge-rr">${c.rrN || 'RR'}</div>
+        <div class="card-detalle">
+          <b>Cuenta ${c.cuenta}</b><span class="etiqueta-candidato">CANDIDATO — falta tipificación</span>
+          <div class="fila-os"><code>${c.osAnterior}</code> → <code>${c.osNuevo}</code> · Ticket ${c.ticket} · ${c.subtipo}</div>
+          <div class="meta">Detectado: ${c.fechaDeteccion} · Visita: ${c.fechaVisita} · ${c.dias} días entre visitas ${esAtendido ? '· ✅ Atendido' : ''}</div>
+        </div>
+        <div class="card-accion"><a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit" target="_blank">Marcar atendido →</a></div>
+      </div>`;
+    }).join('');
+  }
+
+  const pendientes = candidatos.filter(c => !/^(s[ií]|si|x|ok|atendido)/i.test(c.atendido)).length;
+  document.getElementById('estado').innerHTML = `<b>${candidatos.length}</b> candidatos totales · <b>${pendientes}</b> pendientes de atender`;
+  document.getElementById('horaActualizacion').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-MX');
+}
+
+revisar();
+setInterval(revisar, INTERVALO_MS);
+</script>
+
+</body>
+</html>
