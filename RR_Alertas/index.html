@@ -112,10 +112,10 @@
 
 <script>
 const SHEET_ID = '1Pyl_vmwMjy7PXhz8NzoK6xfZwAhW0vCb_tbL1MZtqAE';
-const TAB = 'candidatos';
+const TAB = 'vigentes'; // foto en vivo, solo lo rescatable AHORA -- el historico completo vive en la pestaña "candidatos" del Sheet
 const API_KEY = 'AIzaSyASHf7J097a_nD6sSJxZHo7kiDn_edntuc';
 const URL_SHEET = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/`
-  + encodeURIComponent(`'${TAB}'!A2:Q5000`) + `?key=${API_KEY}`;
+  + encodeURIComponent(`'${TAB}'!A2:L5000`) + `?key=${API_KEY}`;
 
 const INTERVALO_MS = 30000;
 const CLAVE_VISTOS = 'rr_alertas_vistos_v2';
@@ -236,12 +236,14 @@ async function revisar(){
     return;
   }
 
+  // "vigentes" solo trae lo RESCATABLE de AHORA MISMO -- ya viene filtrado
+  // desde el script (se reconstruye completa cada corrida), asi que en
+  // cuanto algo se cancela o termina, desaparece solo de aqui.
   const candidatos = filas.map(c => ({
-    fechaDeteccion: fila(c,0), categoria: fila(c,1), rrN: fila(c,2), cuenta: fila(c,3),
-    osAnterior: fila(c,4), osNuevo: fila(c,5), ticket: fila(c,6),
-    fechaVisita: fila(c,7), dias: fila(c,8), subtipo: fila(c,9),
-    estatus: fila(c,10), estadoVisita: fila(c,11), cluster: fila(c,12), tecnico: fila(c,13),
-    tipificacion: fila(c,14), atendido: fila(c,15), comentario: fila(c,16),
+    rrN: fila(c,0), cuenta: fila(c,1),
+    osAnterior: fila(c,2), osNuevo: fila(c,3), ticket: fila(c,4),
+    fechaVisita: fila(c,5), dias: fila(c,6), subtipo: fila(c,7),
+    estatus: fila(c,8), estadoVisita: fila(c,9), cluster: fila(c,10), tecnico: fila(c,11),
   })).filter(c => c.osNuevo);
 
   const nuevos = candidatos.filter(c => !vistos.has(c.osNuevo));
@@ -249,8 +251,7 @@ async function revisar(){
   if(nuevos.length){
     nuevos.forEach(c => {
       if(notifPermitido){
-        const esRescatable = c.categoria === 'RESCATABLE';
-        new Notification(esRescatable ? '🚨 RESCATABLE — aún se puede cancelar' : 'RR confirmado (histórico)', {
+        new Notification('🚨 RESCATABLE — aún se puede cancelar', {
           body: `${c.rrN} · Cuenta ${c.cuenta}\n${c.osAnterior} → ${c.osNuevo} (${c.dias} días)\n${c.estatus}${c.estadoVisita ? ' / ' + c.estadoVisita : ''} · ${c.cluster || ''}${c.tecnico ? ' · ' + c.tecnico : ''}`,
           tag: c.osNuevo,
         });
@@ -260,34 +261,34 @@ async function revisar(){
     sonarAlerta();
     guardarVistos(vistos);
   }
+  // limpiar del localStorage lo que ya no esta vigente, para que si vuelve
+  // a aparecer mas adelante (otra racha) SI vuelva a notificar
+  const osActuales = new Set(candidatos.map(c => c.osNuevo));
+  vistos.forEach(id => { if(!osActuales.has(id)) vistos.delete(id); });
+  guardarVistos(vistos);
 
-  candidatos.sort((a,b) => (b.fechaDeteccion || '').localeCompare(a.fechaDeteccion || ''));
+  candidatos.sort((a,b) => Number(b.dias) - Number(a.dias));
 
   const lista = document.getElementById('lista');
   if(!candidatos.length){
-    lista.innerHTML = '<div class="vacio">Sin candidatos detectados por ahora. Esta página se actualiza sola cada 30 segundos.</div>';
+    lista.innerHTML = '<div class="vacio">Sin candidatos rescatables por ahora. Esta página se actualiza sola cada 30 segundos.</div>';
   } else {
     lista.innerHTML = candidatos.map(c => {
-      const esAtendido = /^(s[ií]|si|x|ok|atendido)/i.test(c.atendido);
       const esNuevo = nuevos.some(n => n.osNuevo === c.osNuevo);
-      const catClase = c.categoria === 'RESCATABLE' ? 'rescatable' : 'confirmado';
-      const catTexto = c.categoria === 'RESCATABLE' ? '🚨 RESCATABLE — aún se puede cancelar' : 'CONFIRMADO — histórico';
-      return `<div class="card ${catClase} ${esAtendido ? 'atendido':''} ${esNuevo ? 'nuevo':''}">
+      return `<div class="card rescatable ${esNuevo ? 'nuevo':''}">
         <div class="badge-rr">${c.rrN || 'RR'}</div>
         <div class="card-detalle">
-          <b>Cuenta ${c.cuenta}</b><span class="etiqueta-categoria ${catClase}">${catTexto}</span>
+          <b>Cuenta ${c.cuenta}</b><span class="etiqueta-categoria rescatable">🚨 RESCATABLE — aún se puede cancelar</span>
           <div class="fila-os"><code>${c.osAnterior}</code> → <code>${c.osNuevo}</code> · Ticket ${c.ticket} · ${c.subtipo}</div>
           <div class="meta"><b>${c.estatus}</b>${c.estadoVisita ? ' / ' + c.estadoVisita : ''} · Cluster: <b>${c.cluster || '—'}</b> · Técnico: <b>${c.tecnico || '—'}</b></div>
-          <div class="meta">Detectado: ${c.fechaDeteccion} · Visita: ${c.fechaVisita} · ${c.dias} días entre visitas ${esAtendido ? '· ✅ Atendido' : ''}</div>
+          <div class="meta">Visita nueva: ${c.fechaVisita} · ${c.dias} días desde la anterior</div>
         </div>
-        <div class="card-accion"><a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit" target="_blank">Marcar atendido →</a></div>
+        <div class="card-accion"><a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit" target="_blank">Ver histórico →</a></div>
       </div>`;
     }).join('');
   }
 
-  const rescatables = candidatos.filter(c => c.categoria === 'RESCATABLE').length;
-  const pendientes = candidatos.filter(c => !/^(s[ií]|si|x|ok|atendido)/i.test(c.atendido)).length;
-  document.getElementById('estado').innerHTML = `<b>${candidatos.length}</b> candidatos totales · <b>${rescatables}</b> rescatables ahora · <b>${pendientes}</b> pendientes de atender`;
+  document.getElementById('estado').innerHTML = `<b>${candidatos.length}</b> candidatos rescatables ahora mismo`;
   document.getElementById('horaActualizacion').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-MX');
 }
 
