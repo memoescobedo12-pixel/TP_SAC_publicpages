@@ -324,11 +324,10 @@ async function revisar(){
   // desde el script (se reconstruye completa cada corrida), asi que en
   // cuanto algo se cancela o termina, desaparece solo de aqui.
   const candidatos = filas.map(c => ({
-    rrN: fila(c,0), cuenta: fila(c,1),
-    osAnterior: fila(c,2), osNuevo: fila(c,3), ticket: fila(c,4),
-    fechaVisita: fila(c,5), dias: fila(c,6), subtipo: fila(c,7),
-    estatus: fila(c,8), estadoVisita: fila(c,9), cluster: fila(c,10), tecnico: fila(c,11),
-    titular: fila(c,12),
+    rrN: fila(c,0), cuenta: fila(c,1), titular: fila(c,2),
+    osAnterior: fila(c,3), osNuevo: fila(c,4), ticket: fila(c,5),
+    fechaVisita: fila(c,6), dias: fila(c,7), subtipo: fila(c,8),
+    estatus: fila(c,9), estadoVisita: fila(c,10), cluster: fila(c,11), tecnico: fila(c,12),
   })).filter(c => c.osNuevo);
 
   const nuevos = candidatos.filter(c => !vistos.has(c.osNuevo));
