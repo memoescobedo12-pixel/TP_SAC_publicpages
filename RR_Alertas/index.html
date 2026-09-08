@@ -140,7 +140,7 @@ const SHEET_ID = '1Pyl_vmwMjy7PXhz8NzoK6xfZwAhW0vCb_tbL1MZtqAE';
 const TAB = 'vigentes'; // foto en vivo, solo lo rescatable AHORA -- el historico completo vive en la pestaña "candidatos" del Sheet
 const API_KEY = 'AIzaSyASHf7J097a_nD6sSJxZHo7kiDn_edntuc';
 const URL_SHEET = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/`
-  + encodeURIComponent(`'${TAB}'!A2:L5000`) + `?key=${API_KEY}`;
+  + encodeURIComponent(`'${TAB}'!A2:M5000`) + `?key=${API_KEY}`;
 
 const TAB_ESTADO = 'estado'; // pestaña aparte, escrita por rr_tiempo_real_automatizar.py en transiciones de sesion
 const URL_SHEET_ESTADO = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/`
@@ -328,6 +328,7 @@ async function revisar(){
     osAnterior: fila(c,2), osNuevo: fila(c,3), ticket: fila(c,4),
     fechaVisita: fila(c,5), dias: fila(c,6), subtipo: fila(c,7),
     estatus: fila(c,8), estadoVisita: fila(c,9), cluster: fila(c,10), tecnico: fila(c,11),
+    titular: fila(c,12),
   })).filter(c => c.osNuevo);
 
   const nuevos = candidatos.filter(c => !vistos.has(c.osNuevo));
@@ -336,7 +337,7 @@ async function revisar(){
     nuevos.forEach(c => {
       if(notifPermitido){
         new Notification('🚨 RESCATABLE — aún se puede cancelar', {
-          body: `${c.rrN} · Cuenta ${c.cuenta}\n${c.osAnterior} → ${c.osNuevo} (${c.dias} días)\n${c.estatus}${c.estadoVisita ? ' / ' + c.estadoVisita : ''} · ${c.cluster || ''}${c.tecnico ? ' · ' + c.tecnico : ''}`,
+          body: `${c.rrN} · Cuenta ${c.cuenta}${c.titular ? ' · ' + c.titular : ''}\n${c.osAnterior} → ${c.osNuevo} (${c.dias} días)\n${c.estatus}${c.estadoVisita ? ' / ' + c.estadoVisita : ''} · ${c.cluster || ''}${c.tecnico ? ' · ' + c.tecnico : ''}`,
           tag: c.osNuevo,
         });
       }
@@ -362,7 +363,7 @@ async function revisar(){
       return `<div class="card rescatable ${esNuevo ? 'nuevo':''}">
         <div class="badge-rr">${c.rrN || 'RR'}</div>
         <div class="card-detalle">
-          <b>Cuenta ${c.cuenta}</b><span class="etiqueta-categoria rescatable">🚨 RESCATABLE — aún se puede cancelar</span>
+          <b>Cuenta ${c.cuenta}</b>${c.titular ? ' · ' + c.titular : ''}<span class="etiqueta-categoria rescatable">🚨 RESCATABLE — aún se puede cancelar</span>
           <div class="fila-os"><code>${c.osAnterior}</code> → <code>${c.osNuevo}</code> · Ticket ${c.ticket} · ${c.subtipo}</div>
           <div class="meta"><b>${c.estatus}</b>${c.estadoVisita ? ' / ' + c.estadoVisita : ''} · Cluster: <b>${c.cluster || '—'}</b> · Técnico: <b>${c.tecnico || '—'}</b></div>
           <div class="meta">Visita nueva: ${c.fechaVisita} · ${c.dias} días desde la anterior</div>
