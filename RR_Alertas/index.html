@@ -111,8 +111,8 @@
   <div class="banner-sesion" id="bannerSesion">
     <div class="icono">⚠️</div>
     <div>
-      <div class="titulo">Sesión de Field Cloud desconectada</div>
-      <div class="detalle">El detector dejó de exportar datos nuevos hasta que alguien vuelva a loguearse en la ventana de Chrome del script. Las alertas de RR pueden estar desactualizadas mientras tanto.</div>
+      <div class="titulo">El detector de RR tiene un problema</div>
+      <div class="detalle" id="bannerDetalle">El detector dejó de exportar datos nuevos. Las alertas de RR pueden estar desactualizadas mientras tanto.</div>
     </div>
   </div>
 
@@ -233,15 +233,21 @@ async function revisarSesion(){
 
   const activa = (fila[0] ?? 'true').toString().trim().toLowerCase() !== 'false';
   const banner = document.getElementById('bannerSesion');
+  const mensaje = fila[2] || 'El detector de RR dejó de actualizarse -- revisa la ventana de Chrome del script.';
 
   if(!activa){
+    document.getElementById('bannerDetalle').textContent = mensaje;
     banner.classList.add('activo');
     if(!sesionCaidaAvisada){
       sesionCaidaAvisada = true;
       if(notifPermitido){
-        new Notification('⚠️ Sesión de Field Cloud desconectada', {
-          body: (fila[2] || 'El detector de RR dejó de actualizarse -- alguien debe volver a loguearse en la ventana de Chrome del script.'),
-          tag: 'sesion-expirada',
+        // Mismo aviso llamativo (sonido + notificacion) para CUALQUIER
+        // anomalia -- sesion caida, o el detector fallando ciclo tras
+        // ciclo por cualquier otro motivo (ver 'estado' en el Sheet /
+        // FALLAS_SEGUIDAS_PARA_ALERTAR en rr_tiempo_real_automatizar.py).
+        new Notification('⚠️ El detector de RR tiene un problema', {
+          body: mensaje,
+          tag: 'rr-anomalia',
         });
       }
       sonarAlertaSesion();
