@@ -72,6 +72,23 @@
   .vacio{text-align:center;color:var(--muted);padding:60px 20px;font-size:14px;}
   .link-sheet{font-size:13px;color:var(--muted);margin-top:24px;text-align:center;}
   .link-sheet a{color:var(--blue);}
+
+  .banner-sesion{
+    display:none;align-items:center;gap:16px;
+    background:linear-gradient(135deg,var(--yellow) 0%,#d98c1a 100%);
+    color:var(--navy);border:3px solid var(--navy);border-radius:14px;
+    padding:18px 22px;margin-bottom:20px;
+    box-shadow:0 4px 16px rgba(245,166,35,.5);
+    animation:pulso-sesion 1.4s ease-in-out infinite;
+  }
+  .banner-sesion.activo{display:flex;}
+  .banner-sesion .icono{font-size:34px;flex-shrink:0;}
+  .banner-sesion .titulo{font-size:17px;font-weight:800;}
+  .banner-sesion .detalle{font-size:13px;font-weight:600;margin-top:2px;}
+  @keyframes pulso-sesion{
+    0%,100%{box-shadow:0 4px 16px rgba(245,166,35,.5);}
+    50%{box-shadow:0 4px 32px rgba(245,166,35,.95);}
+  }
 </style>
 </head>
 <body>
@@ -90,6 +107,14 @@
 </div>
 
 <div class="main">
+
+  <div class="banner-sesion" id="bannerSesion">
+    <div class="icono">⚠️</div>
+    <div>
+      <div class="titulo">Sesión de Field Cloud desconectada</div>
+      <div class="detalle">El detector dejó de exportar datos nuevos hasta que alguien vuelva a loguearse en la ventana de Chrome del script. Las alertas de RR pueden estar desactualizadas mientras tanto.</div>
+    </div>
+  </div>
 
   <div class="panel-activar">
     <div>
@@ -116,6 +141,10 @@ const TAB = 'vigentes'; // foto en vivo, solo lo rescatable AHORA -- el historic
 const API_KEY = 'AIzaSyASHf7J097a_nD6sSJxZHo7kiDn_edntuc';
 const URL_SHEET = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/`
   + encodeURIComponent(`'${TAB}'!A2:L5000`) + `?key=${API_KEY}`;
+
+const TAB_ESTADO = 'estado'; // pestaña aparte, escrita por rr_tiempo_real_automatizar.py en transiciones de sesion
+const URL_SHEET_ESTADO = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/`
+  + encodeURIComponent(`'${TAB_ESTADO}'!A2:C2`) + `?key=${API_KEY}`;
 
 const INTERVALO_MS = 30000;
 const CLAVE_VISTOS = 'rr_alertas_vistos_v2';
@@ -172,6 +201,55 @@ function sonarAlerta(){
       o.start(ctx.currentTime+t); o.stop(ctx.currentTime+t+0.18);
     });
   }catch(e){}
+}
+
+// Sonido distinto al de RR (mas grave, tipo "beep" de alarma, no la
+// campanita de dos tonos) -- para que se distinga de oido cual alerta es.
+function sonarAlertaSesion(){
+  if(!audioListo) return;
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0,0.3,0.6,0.9].forEach((t)=>{
+      const o = ctx.createOscillator(); const g = ctx.createGain();
+      o.type='square'; o.frequency.value = 440;
+      g.gain.setValueAtTime(0.001, ctx.currentTime+t);
+      g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime+t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+t+0.25);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(ctx.currentTime+t); o.stop(ctx.currentTime+t+0.26);
+    });
+  }catch(e){}
+}
+
+let sesionCaidaAvisada = false; // evita re-notificar en cada poll mientras siga caida
+
+async function revisarSesion(){
+  let fila;
+  try{
+    const resp = await fetch(URL_SHEET_ESTADO + '&_=' + Date.now());
+    const data = await resp.json();
+    fila = (data.values || [])[0] || [];
+  }catch(e){ return; }
+
+  const activa = (fila[0] ?? 'true').toString().trim().toLowerCase() !== 'false';
+  const banner = document.getElementById('bannerSesion');
+
+  if(!activa){
+    banner.classList.add('activo');
+    if(!sesionCaidaAvisada){
+      sesionCaidaAvisada = true;
+      if(notifPermitido){
+        new Notification('⚠️ Sesión de Field Cloud desconectada', {
+          body: (fila[2] || 'El detector de RR dejó de actualizarse -- alguien debe volver a loguearse en la ventana de Chrome del script.'),
+          tag: 'sesion-expirada',
+        });
+      }
+      sonarAlertaSesion();
+    }
+  } else {
+    banner.classList.remove('activo');
+    sesionCaidaAvisada = false;
+  }
 }
 
 function actualizarBotonActivar(){
@@ -293,7 +371,9 @@ async function revisar(){
 }
 
 revisar();
+revisarSesion();
 setInterval(revisar, INTERVALO_MS);
+setInterval(revisarSesion, INTERVALO_MS);
 </script>
 
 </body>
