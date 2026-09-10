@@ -66,6 +66,17 @@
   .fila-os code{background:#f0f2f7;padding:1px 5px;border-radius:4px;}
   .meta{font-size:12px;color:var(--muted);margin-top:4px;}
   .meta b{color:var(--text);}
+  .meta .proveedor{color:var(--red);font-weight:700;}
+
+  /* Datos de la OS anterior y la OS nueva, agrupados y con un borde
+     tenue para distinguirlos entre si -- a proposito tonos apagados
+     (no colores de semaforo) para que sigan leyendose como parte del
+     mismo RR, no como cosas distintas. */
+  .bloque-os{font-size:13px;color:var(--muted);margin-top:4px;padding-left:9px;border-left:3px solid var(--border);}
+  .bloque-os.anterior{border-left-color:#9fb0cf;}
+  .bloque-os.nueva{border-left-color:#7fc0d6;}
+  .bloque-os .etq{color:var(--text);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;margin-right:6px;}
+  .bloque-os code{background:#f0f2f7;padding:1px 5px;border-radius:4px;}
   .card-accion a{
     font-size:13px;color:var(--blue);text-decoration:none;font-weight:600;white-space:nowrap;
   }
@@ -140,7 +151,7 @@ const SHEET_ID = '1Pyl_vmwMjy7PXhz8NzoK6xfZwAhW0vCb_tbL1MZtqAE';
 const TAB = 'vigentes'; // foto en vivo, solo lo rescatable AHORA -- el historico completo vive en la pestaña "candidatos" del Sheet
 const API_KEY = 'AIzaSyASHf7J097a_nD6sSJxZHo7kiDn_edntuc';
 const URL_SHEET = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/`
-  + encodeURIComponent(`'${TAB}'!A2:M5000`) + `?key=${API_KEY}`;
+  + encodeURIComponent(`'${TAB}'!A2:O5000`) + `?key=${API_KEY}`;
 
 const TAB_ESTADO = 'estado'; // pestaña aparte, escrita por rr_tiempo_real_automatizar.py en transiciones de sesion
 const URL_SHEET_ESTADO = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/`
@@ -309,6 +320,31 @@ actualizarBotonActivar();
 
 function fila(cols, i){ return (cols[i] ?? '').toString().trim(); }
 
+// Proveedor por cluster (lista dada por Memo 2026-09-09/10). Los
+// subclusters (ACEREROS_2_A, AMPLIACION XOCHIPILLI, etc.) se unifican
+// primero al cluster base.
+function normalizarCluster(c){
+  if(!c) return c;
+  let n = c.trim().toUpperCase();
+  n = n.replace(/_(\d+_)?A$/, '');          // ACEREROS_A, ACEREROS_2_A, ACEREROS_3_A -> ACEREROS
+  if(n.startsWith('AMPLIACION ')) n = n.replace('AMPLIACION ', '').trim(); // AMPLIACION XOCHIPILLI -> XOCHIPILLI
+  return n;
+}
+const PROVEEDOR_POR_CLUSTER = {
+  'XOCHIPILLI': 'CRCE', 'TECNOLOGICO': 'CRCE', 'PLAZA DE LAS CULTURAS': 'CRCE',
+  'ACEREROS': 'SLK', 'CASTANOS': 'SLK', 'OBRERAS': 'SLK', 'RIO SABINAS': 'SLK', 'NUEVA ROSITA': 'SLK',
+};
+// SLUTEN es un caso especial: cubre Piedras Negras (clusters TECNOLOGICO/
+// PLAZA DE LAS CULTURAS, que por default caen en CRCE) pero SOLO cuando
+// la OS ANTERIOR la hizo uno de estos dos tecnicos.
+const TECNICOS_SLUTEN = new Set(['Jesus Eduardo Navarro Sotelo', 'Christopher Arnoldo Elizondo Fuentes']);
+function calcularProveedor(clusterNorm, tecnicoAnterior){
+  if((clusterNorm === 'TECNOLOGICO' || clusterNorm === 'PLAZA DE LAS CULTURAS') && TECNICOS_SLUTEN.has((tecnicoAnterior || '').trim())){
+    return 'SLUTEN';
+  }
+  return PROVEEDOR_POR_CLUSTER[clusterNorm] || '';
+}
+
 async function revisar(){
   let filas;
   try{
@@ -325,9 +361,10 @@ async function revisar(){
   // cuanto algo se cancela o termina, desaparece solo de aqui.
   const candidatos = filas.map(c => ({
     rrN: fila(c,0), cuenta: fila(c,1), titular: fila(c,2),
-    osAnterior: fila(c,3), osNuevo: fila(c,4), ticket: fila(c,5),
-    fechaVisita: fila(c,6), dias: fila(c,7), subtipo: fila(c,8),
-    estatus: fila(c,9), estadoVisita: fila(c,10), cluster: fila(c,11), tecnico: fila(c,12),
+    osAnterior: fila(c,3), tecnicoAnterior: fila(c,4), fechaAnterior: fila(c,5),
+    osNuevo: fila(c,6), ticket: fila(c,7), tecnico: fila(c,8), fechaVisita: fila(c,9),
+    dias: fila(c,10), subtipo: fila(c,11),
+    estatus: fila(c,12), estadoVisita: fila(c,13), cluster: fila(c,14),
   })).filter(c => c.osNuevo);
 
   const nuevos = candidatos.filter(c => !vistos.has(c.osNuevo));
@@ -359,13 +396,15 @@ async function revisar(){
   } else {
     lista.innerHTML = candidatos.map(c => {
       const esNuevo = nuevos.some(n => n.osNuevo === c.osNuevo);
+      const clusterNorm = normalizarCluster(c.cluster);
+      const proveedor = calcularProveedor(clusterNorm, c.tecnicoAnterior);
       return `<div class="card rescatable ${esNuevo ? 'nuevo':''}">
         <div class="badge-rr">${c.rrN || 'RR'}</div>
         <div class="card-detalle">
           <b>Cuenta ${c.cuenta}</b>${c.titular ? ' · ' + c.titular : ''}<span class="etiqueta-categoria rescatable">🚨 RESCATABLE — aún se puede cancelar</span>
-          <div class="fila-os"><code>${c.osAnterior}</code> → <code>${c.osNuevo}</code> · Ticket ${c.ticket} · ${c.subtipo}</div>
-          <div class="meta"><b>${c.estatus}</b>${c.estadoVisita ? ' / ' + c.estadoVisita : ''} · Cluster: <b>${c.cluster || '—'}</b> · Técnico: <b>${c.tecnico || '—'}</b></div>
-          <div class="meta">Visita nueva: ${c.fechaVisita} · ${c.dias} días desde la anterior</div>
+          <div class="bloque-os anterior"><span class="etq">Anterior</span><code>${c.osAnterior}</code> · ${c.tecnicoAnterior || 'Sin técnico asignado'} · ${c.fechaAnterior || '—'}</div>
+          <div class="bloque-os nueva"><span class="etq">Nueva</span><code>${c.osNuevo}</code> · Ticket ${c.ticket} · ${c.tecnico || 'Sin técnico asignado'} · ${c.fechaVisita} · <b>${c.estatus}</b>${c.estadoVisita ? ' / ' + c.estadoVisita : ''}</div>
+          <div class="meta">${c.subtipo} · Cluster: <b>${clusterNorm || '—'}</b>${proveedor ? ' <span class="proveedor">' + proveedor + '</span>' : ''} · ${c.dias} días de diferencia</div>
         </div>
         <div class="card-accion"><a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit" target="_blank">Ver histórico →</a></div>
       </div>`;
