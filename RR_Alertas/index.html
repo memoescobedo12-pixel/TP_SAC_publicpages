@@ -75,13 +75,16 @@
      de ancho fijo (grid) para que OS/tecnico/fecha empiecen siempre en
      la misma posicion en todas las tarjetas -- mas facil de leer en
      lista que separado solo con puntos. */
+  /* Misma plantilla de columnas en las dos filas (aunque "anterior" no
+     use la 5a columna) -- si no, el espacio flexible se reparte distinto
+     en cada fila y la fecha no cae alineada entre "Anterior" y "Nueva". */
   .bloque-os{
-    display:grid;grid-template-columns:64px 96px minmax(170px,1fr) 132px;column-gap:14px;
+    display:grid;grid-template-columns:64px 96px minmax(170px,1fr) 132px 1fr;column-gap:14px;
     font-size:13px;color:var(--muted);margin-top:6px;align-items:baseline;
     padding:3px 0 3px 9px;border-left:3px solid var(--border);
   }
   .bloque-os.anterior{border-left-color:#9fb0cf;}
-  .bloque-os.nueva{grid-template-columns:64px 96px minmax(170px,1fr) 132px 1fr;border-left-color:#7fc0d6;}
+  .bloque-os.nueva{border-left-color:#7fc0d6;}
   .bloque-os .etq{color:var(--text);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;}
   .bloque-os code{background:#f0f2f7;padding:1px 5px;border-radius:4px;justify-self:start;}
   .card-accion a{
@@ -409,7 +412,7 @@ async function revisar(){
         <div class="badge-rr">${c.rrN || 'RR'}</div>
         <div class="card-detalle">
           <b>Cuenta ${c.cuenta}</b>${c.titular ? ' · ' + c.titular : ''}<span class="etiqueta-categoria rescatable">🚨 RESCATABLE — aún se puede cancelar</span>
-          <div class="bloque-os anterior"><span class="etq">Anterior</span><code>${c.osAnterior}</code><span>${c.tecnicoAnterior || 'Sin técnico asignado'}</span><span>${c.fechaAnterior || '—'}</span></div>
+          <div class="bloque-os anterior"><span class="etq">Anterior</span><code>${c.osAnterior}</code><span>${c.tecnicoAnterior || 'Sin técnico asignado'}</span><span>${c.fechaAnterior || '—'}</span><span></span></div>
           <div class="bloque-os nueva"><span class="etq">Nueva</span><code>${c.osNuevo}</code><span>${c.tecnico || 'Sin técnico asignado'}</span><span>${c.fechaVisita}</span><span><b>${c.estatus}</b>${c.estadoVisita ? ' / ' + c.estadoVisita : ''}</span></div>
           <div class="meta">${c.subtipo} · Cluster: <b>${clusterNorm || '—'}</b>${proveedor ? ' <span class="proveedor">' + proveedor + '</span>' : ''} · ${c.dias} días de diferencia</div>
         </div>
