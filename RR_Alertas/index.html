@@ -67,6 +67,7 @@
   .meta{font-size:12px;color:var(--muted);margin-top:4px;}
   .meta b{color:var(--text);}
   .meta .proveedor{color:var(--red);font-weight:700;}
+  .meta .supervisores{color:var(--text);font-weight:700;}
 
   /* Datos de la OS anterior y la OS nueva, agrupados y con un borde
      tenue para distinguirlos entre si -- a proposito tonos apagados
@@ -344,6 +345,13 @@ const PROVEEDOR_POR_CLUSTER = {
   'XOCHIPILLI': 'CRCE', 'TECNOLOGICO': 'CRCE', 'PLAZA DE LAS CULTURAS': 'CRCE',
   'ACEREROS': 'SLK', 'CASTANOS': 'SLK', 'OBRERAS': 'SLK', 'RIO SABINAS': 'SLK', 'NUEVA ROSITA': 'SLK',
 };
+// Supervisores por proveedor (dictados por Memo 2026-09-13), mostrados
+// entre parentesis junto al nombre del proveedor en cada tarjeta.
+const SUPERVISORES_POR_PROVEEDOR = {
+  'CRCE': 'Marco Antonio, Ernesto Baeza, David Villarreal',
+  'SLK': 'Tania Carola, Juan Manuel, Ana Contla',
+  'SLUTEN': 'Graciela Dominguez',
+};
 // SLUTEN es un caso especial: cubre Piedras Negras (clusters TECNOLOGICO/
 // PLAZA DE LAS CULTURAS, que por default caen en CRCE) pero SOLO cuando
 // la OS ANTERIOR la hizo uno de estos dos tecnicos.
@@ -414,7 +422,7 @@ async function revisar(){
           <b>Cuenta ${c.cuenta}</b>${c.titular ? ' · ' + c.titular : ''}<span class="etiqueta-categoria rescatable">🚨 RESCATABLE — aún se puede cancelar</span>
           <div class="bloque-os anterior"><span class="etq">Anterior</span><code>${c.osAnterior}</code><span>${c.tecnicoAnterior || 'Sin técnico asignado'}</span><span>${c.fechaAnterior || '—'}</span><span></span></div>
           <div class="bloque-os nueva"><span class="etq">Nueva</span><code>${c.osNuevo}</code><span>${c.tecnico || 'Sin técnico asignado'}</span><span>${c.fechaVisita}</span><span><b>${c.estatus}</b>${c.estadoVisita ? ' / ' + c.estadoVisita : ''}</span></div>
-          <div class="meta">${c.subtipo} · Cluster: <b>${clusterNorm || '—'}</b>${proveedor ? ' <span class="proveedor">' + proveedor + '</span>' : ''} · ${c.dias} días de diferencia</div>
+          <div class="meta">${c.subtipo} · Cluster: <b>${clusterNorm || '—'}</b>${proveedor ? ' <span class="proveedor">' + proveedor + '</span>' + (SUPERVISORES_POR_PROVEEDOR[proveedor] ? ' <span class="supervisores">(' + SUPERVISORES_POR_PROVEEDOR[proveedor] + ')</span>' : '') : ''} · ${c.dias} días de diferencia</div>
         </div>
         <div class="card-accion"><a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit" target="_blank">Ver histórico →</a></div>
       </div>`;
