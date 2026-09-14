@@ -67,6 +67,7 @@
   .meta{font-size:12px;color:var(--muted);margin-top:4px;}
   .meta b{color:var(--text);}
   .meta .proveedor{color:var(--red);font-weight:700;}
+  .meta .zona{color:var(--red);font-weight:700;}
   .meta .supervisores{color:var(--text);font-weight:700;}
 
   /* Datos de la OS anterior y la OS nueva, agrupados y con un borde
@@ -356,6 +357,17 @@ const SUPERVISORES_POR_PROVEEDOR = {
 // PLAZA DE LAS CULTURAS, que por default caen en CRCE) pero SOLO cuando
 // la OS ANTERIOR la hizo uno de estos dos tecnicos.
 const TECNICOS_SLUTEN = new Set(['Jesus Eduardo Navarro Sotelo', 'Christopher Arnoldo Elizondo Fuentes']);
+// Zona (pedido de Memo 2026-09-13) -- distinta del proveedor, es la
+// sub-region geografica. Se muestra abreviada, junto al cluster.
+const ZONA_ABREV_POR_CLUSTER = {
+  'ACEREROS': 'MVA G', 'CASTANOS': 'MVA G', 'OBRERAS': 'MVA G',
+  'XOCHIPILLI': 'MVA C',
+  'NUEVA ROSITA': 'SAB A', 'RIO SABINAS': 'SAB A',
+  'PLAZA DE LAS CULTURAS': 'PNG G', 'TECNOLOGICO': 'PNG G',
+};
+function calcularZonaAbrev(clusterNorm){
+  return ZONA_ABREV_POR_CLUSTER[clusterNorm] || '';
+}
 function calcularProveedor(clusterNorm, tecnicoAnterior){
   if((clusterNorm === 'TECNOLOGICO' || clusterNorm === 'PLAZA DE LAS CULTURAS') && TECNICOS_SLUTEN.has((tecnicoAnterior || '').trim())){
     return 'SLUTEN';
@@ -416,13 +428,14 @@ async function revisar(){
       const esNuevo = nuevos.some(n => n.osNuevo === c.osNuevo);
       const clusterNorm = normalizarCluster(c.cluster);
       const proveedor = calcularProveedor(clusterNorm, c.tecnicoAnterior);
+      const zonaAbrev = calcularZonaAbrev(clusterNorm);
       return `<div class="card rescatable ${esNuevo ? 'nuevo':''}">
         <div class="badge-rr">${c.rrN || 'RR'}</div>
         <div class="card-detalle">
           <b>Cuenta ${c.cuenta}</b>${c.titular ? ' · ' + c.titular : ''}<span class="etiqueta-categoria rescatable">🚨 RESCATABLE — aún se puede cancelar</span>
           <div class="bloque-os anterior"><span class="etq">Anterior</span><code>${c.osAnterior}</code><span>${c.tecnicoAnterior || 'Sin técnico asignado'}</span><span>${c.fechaAnterior || '—'}</span><span></span></div>
           <div class="bloque-os nueva"><span class="etq">Nueva</span><code>${c.osNuevo}</code><span>${c.tecnico || 'Sin técnico asignado'}</span><span>${c.fechaVisita}</span><span><b>${c.estatus}</b>${c.estadoVisita ? ' / ' + c.estadoVisita : ''}</span></div>
-          <div class="meta">${c.subtipo} · Cluster: <b>${clusterNorm || '—'}</b>${proveedor ? ' <span class="proveedor">' + proveedor + '</span>' + (SUPERVISORES_POR_PROVEEDOR[proveedor] ? ' <span class="supervisores">(' + SUPERVISORES_POR_PROVEEDOR[proveedor] + ')</span>' : '') : ''} · ${c.dias} días de diferencia</div>
+          <div class="meta">${c.subtipo} · Cluster: <b>${clusterNorm || '—'}</b>${zonaAbrev ? ' <span class="zona">' + zonaAbrev + '</span>' : ''}${proveedor ? ' / <span class="proveedor">' + proveedor + '</span>' + (SUPERVISORES_POR_PROVEEDOR[proveedor] ? ' <span class="supervisores">(' + SUPERVISORES_POR_PROVEEDOR[proveedor] + ')</span>' : '') : ''} · ${c.dias} días de diferencia</div>
         </div>
         <div class="card-accion"><a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit" target="_blank">Ver histórico →</a></div>
       </div>`;
