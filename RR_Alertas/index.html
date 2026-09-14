@@ -271,6 +271,7 @@ async function revisarSesion(){
         new Notification('⚠️ El detector de RR tiene un problema', {
           body: mensaje,
           tag: 'rr-anomalia',
+          requireInteraction: true,  // no se cierra sola, Memo la cierra a mano
         });
       }
       sonarAlertaSesion();
@@ -405,6 +406,7 @@ async function revisar(){
         new Notification('🚨 RESCATABLE — aún se puede cancelar', {
           body: `${c.rrN} · Cuenta ${c.cuenta}${c.titular ? ' · ' + c.titular : ''}\n${c.osAnterior} → ${c.osNuevo} (${c.dias} días)\n${c.estatus}${c.estadoVisita ? ' / ' + c.estadoVisita : ''} · ${c.cluster || ''}${c.tecnico ? ' · ' + c.tecnico : ''}`,
           tag: c.osNuevo,
+          requireInteraction: true,  // no se cierra sola, Memo la cierra a mano
         });
       }
       vistos.add(c.osNuevo);
