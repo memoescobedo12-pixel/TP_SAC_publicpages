@@ -112,6 +112,7 @@
   .modo-conteo .modo-btn:hover{color:#fff;}
   .modo-conteo .modo-btn.activo.modo-cuentas{background:var(--blue);color:#fff;box-shadow:0 2px 10px rgba(0,174,239,.55);}
   .modo-conteo .modo-btn.activo.modo-tickets{background:var(--yellow);color:#1a1a1a;box-shadow:0 2px 10px rgba(245,166,35,.55);}
+  .modo-conteo .modo-btn.activo.modo-generico{background:#fff;color:var(--navy);box-shadow:0 2px 10px rgba(255,255,255,.4);}
 
   .resumen{
     background:#fff;
@@ -175,6 +176,7 @@
   .kpi.tono-rosa{background:linear-gradient(135deg,#8c0f34,var(--ctt-pink) 70%);}
   .kpi.tono-azul{background:linear-gradient(135deg,#0577A0,var(--blue) 70%);}
   .kpi.tono-amarillo{background:linear-gradient(135deg,var(--chart-gold-deep),var(--yellow) 75%);}
+  .kpi.tono-navy{background:linear-gradient(135deg,#000c24,var(--navy) 75%);}
 
   .mini-cols{
     display:flex;
@@ -473,6 +475,13 @@
 <div class="mini-cols">
   <div class="mini acc-green" style="flex:1 1 100%;">
     <div class="mini-head">📈 TENDENCIA POR CLUSTER — histórico semanal (tickets)</div>
+    <div style="padding:8px 12px 0;display:flex;justify-content:flex-end;">
+      <div class="modo-conteo" id="modoTendencia">
+        <span class="modo-conteo-label">Ver</span>
+        <button class="modo-btn modo-generico activo" data-modo="cluster" onclick="cambiarModoTendencia('cluster')">Por Cluster</button>
+        <button class="modo-btn modo-generico" data-modo="total" onclick="cambiarModoTendencia('total')">Total</button>
+      </div>
+    </div>
     <div class="chart-box trend-wrap" id="chartTendenciaCluster"></div>
     <div class="trend-legend" id="legendTendenciaCluster"></div>
   </div>
@@ -747,7 +756,12 @@ function getFiltros(){
 function aplicarFiltros(){
   const f = getFiltros();
   let rows = HIST;
-  if(f.semanas.length) rows = rows.filter(r=>f.semanas.includes(r.semana));
+  // Si hay un rango de fechas activo, este manda sobre la Semana seleccionada
+  // (que normalmente trae marcada una sola semana por default) -- si no, un
+  // rango tipo "1 al 31 de agosto" se combinaba en AND con esa semana y casi
+  // siempre daba 0 resultados por no traslaparse.
+  const usaRangoFechas = !!(f.desde || f.hasta);
+  if(!usaRangoFechas && f.semanas.length) rows = rows.filter(r=>f.semanas.includes(r.semana));
   if(f.ciudades.length){
     const clustersCiudad = new Set();
     f.ciudades.forEach(id=>{ (CIUDAD_CLUSTERS[id]?.clusters||[]).forEach(c=>clustersCiudad.add(c)); });
@@ -867,7 +881,11 @@ function etiquetaClusters(f){
 function renderBanner(filteredRows){
   const f = getFiltros();
   let sub = '';
-  if(!f.semanas.length || f.semanas.length===Array.from(new Set(HIST.map(r=>r.semana))).length){
+  if(f.desde || f.hasta){
+    const desdeTxt = f.desde ? formatoFechaCorta(f.desde) : '…';
+    const hastaTxt = f.hasta ? formatoFechaCorta(f.hasta) : '…';
+    sub = `Rango de fechas: ${desdeTxt} – ${hastaTxt}`;
+  } else if(!f.semanas.length || f.semanas.length===Array.from(new Set(HIST.map(r=>r.semana))).length){
     const semanas = Array.from(new Set(HIST.map(r=>r.semana))).sort((a,b)=>a-b);
     sub = `Todas las semanas (histórico, Sem ${String(semanas[0]).padStart(2,'0')} a Sem ${String(semanas[semanas.length-1]).padStart(2,'0')})`;
   } else if(f.semanas.length===1){
@@ -884,12 +902,15 @@ function renderBanner(filteredRows){
   }
   sub += etiquetaCiudades(f);
   sub += etiquetaClusters(f);
-  if(f.desde || f.hasta) sub += ` · Rango: ${f.desde||'…'} a ${f.hasta||'…'}`;
-  sub += ' · Repetido60 = repeticiones acumuladas en 60 días';
   document.getElementById('bannerSub').textContent = sub;
 }
 
 function etiquetaPeriodo(f){
+  if(f.desde || f.hasta){
+    const desdeTxt = f.desde ? formatoFechaCorta(f.desde) : '…';
+    const hastaTxt = f.hasta ? formatoFechaCorta(f.hasta) : '…';
+    return `${desdeTxt} - ${hastaTxt}`;
+  }
   return etiquetaSemanas(f.semanas, false);
 }
 
@@ -979,6 +1000,52 @@ function baseClientesPNM(f){
   return {valor: row.base_usuarios, label: `(más reciente de la selección: semana ${String(row.semana).padStart(2,'0')})`};
 }
 
+function formatoFechaCorta(iso){
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+// Promedio de tickets por semana segun el periodo seleccionado en el filtro:
+// - Rango de fechas activo (Desde/Hasta) -> promedio de esas fechas.
+// - 2+ semanas marcadas -> promedio de esas semanas.
+// - 0 o 1 semana marcada (incluye el estado por defecto al abrir) -> promedio
+//   de TODO el historico, porque una sola semana no da un promedio util.
+// En todos los casos respeta los filtros de Ciudad/Cluster activos.
+function calcularPromedio(f){
+  let clustersPermitidos = null;
+  if(f.ciudades.length){
+    clustersPermitidos = new Set();
+    f.ciudades.forEach(id=>{ (CIUDAD_CLUSTERS[id]?.clusters||[]).forEach(c=>clustersPermitidos.add(c)); });
+  }
+  if(f.clusters.length){
+    const soloClusters = new Set(f.clusters);
+    clustersPermitidos = clustersPermitidos ? new Set([...clustersPermitidos].filter(c=>soloClusters.has(c))) : soloClusters;
+  }
+  const pasaCiudadCluster = r => !clustersPermitidos || clustersPermitidos.has(r.clusterNorm);
+
+  if(f.desde || f.hasta){
+    const tsDesde = tsFromInput(f.desde, false);
+    const tsHasta = tsFromInput(f.hasta, true);
+    const rows = HIST.filter(r => pasaCiudadCluster(r) &&
+      (tsDesde===null || (r.fechaTS!==null && r.fechaTS>=tsDesde)) &&
+      (tsHasta===null || (r.fechaTS!==null && r.fechaTS<=tsHasta)));
+    const nSemanas = Math.max(1, new Set(rows.map(r=>r.semana)).size);
+    const desdeTxt = f.desde ? formatoFechaCorta(f.desde) : '…';
+    const hastaTxt = f.hasta ? formatoFechaCorta(f.hasta) : '…';
+    return { valor: Math.round(rows.length/nSemanas), label: `PROMEDIO ${desdeTxt} - ${hastaTxt}` };
+  }
+
+  if(f.semanas.length >= 2){
+    const rows = HIST.filter(r => pasaCiudadCluster(r) && f.semanas.includes(r.semana));
+    const orden = [...f.semanas].sort((a,b)=>a-b);
+    return { valor: Math.round(rows.length/f.semanas.length), label: `PROMEDIO SEM ${String(orden[0]).padStart(2,'0')} - SEM ${String(orden[orden.length-1]).padStart(2,'0')}` };
+  }
+
+  const rows = HIST.filter(pasaCiudadCluster);
+  const nSemanas = Math.max(1, new Set(HIST.map(r=>r.semana)).size);
+  return { valor: Math.round(rows.length/nSemanas), label: 'PROMEDIO TOTAL' };
+}
+
 function renderKPIs(cuentas, totalTickets, repetidos, cuentasVigentes){
   const f = getFiltros();
   const total = cuentas.length;
@@ -987,9 +1054,10 @@ function renderKPIs(cuentas, totalTickets, repetidos, cuentasVigentes){
   // cuentasVigentesRepetido60) -- por eso el % es sobre cuentasVigentes.length,
   // no sobre total (que es el volumen de la semana filtrada).
   const con4mas = cuentasVigentes.filter(c=>c.repetido60>=4);
-  const periodoLabel = etiquetaPeriodo(f) + (f.desde||f.hasta ? ` · ${f.desde||'…'} a ${f.hasta||'…'}` : '');
+  const periodoLabel = etiquetaPeriodo(f);
   const porCluster = countBy(cuentas,'clusterNorm');
   const base = baseClientesPNM(f);
+  const promedio = calcularPromedio(f);
 
   let cards = `
     <div class="kpi tono-verde">
@@ -997,6 +1065,12 @@ function renderKPIs(cuentas, totalTickets, repetidos, cuentasVigentes){
       <div class="label">Total Tickets</div>
       <div class="value clickable" onclick='${onclickDrill('allTickets',null,'Total Tickets RR')}'>${totalTickets}</div>
       <div class="sub">${periodoLabel}</div>
+    </div>
+    <div class="kpi tono-navy">
+      <div class="icon">➗</div>
+      <div class="label">Promedio de Tickets RR</div>
+      <div class="value">${promedio.valor}</div>
+      <div class="sub">${promedio.label}</div>
     </div>
     <div class="kpi tono-morado">
       <div class="icon">🔁</div>
@@ -1439,6 +1513,16 @@ function renderChartRepDist(tickets){
   wireHoverGroup(wrap, wrap.querySelectorAll('.vbar-item'));
 }
 
+let MODO_TENDENCIA = 'cluster'; // 'cluster' | 'total' -- switch de la grafica Tendencia por Cluster
+function cambiarModoTendencia(modo){
+  if(MODO_TENDENCIA === modo) return;
+  MODO_TENDENCIA = modo;
+  document.querySelectorAll('#modoTendencia .modo-btn').forEach(b=>{
+    b.classList.toggle('activo', b.dataset.modo === modo);
+  });
+  renderTendenciaCluster(getFiltros().ciudades);
+}
+
 // --- Tendencia por cluster: linea historica de tickets/semana, siempre con
 // TODAS las semanas de HIST (independiente del filtro de Semana de arriba) ---
 function renderTendenciaCluster(ciudades){
@@ -1455,6 +1539,51 @@ function renderTendenciaCluster(ciudades){
   if(!semanas.length || !clusters.length){
     el.innerHTML = '<div class="vacio">Sin datos</div>';
     legendEl.innerHTML = '';
+    return;
+  }
+
+  if(MODO_TENDENCIA === 'total'){
+    const clusterSet = new Set(clusters);
+    const idxSemanaTotal = new Map(semanas.map((s,i)=>[s,i]));
+    const totales = semanas.map(()=>0);
+    HIST.forEach(r=>{
+      if(!r.clusterNorm || !clusterSet.has(r.clusterNorm)) return;
+      totales[idxSemanaTotal.get(r.semana)]++;
+    });
+
+    const maxTotal = Math.max(1, ...totales);
+    const {ticks:ticksT, niceMax:niceMaxT} = niceTicks(maxTotal);
+    const W = Math.max(760, semanas.length*34), H = 260, padL = 34, padR = 12, padT = 10, padB = 24;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+    const bandW = plotW / semanas.length;
+    const gap = Math.min(2, bandW*0.06);
+    const yForT = v => padT + plotH - (v/niceMaxT*plotH);
+
+    const gridHtmlT = ticksT.map(t=>{
+      const y = yForT(t);
+      return `<line class="trend-gridline" x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}"/>`+
+             `<text class="trend-axis-label" x="${(padL-6).toFixed(1)}" y="${(y+3).toFixed(1)}" text-anchor="end">${t}</text>`;
+    }).join('');
+
+    const salto = semanas.length > 16 ? 2 : 1;
+    const xLabelsHtmlT = semanas.map((s,i)=>{
+      if(i % salto !== 0 && i !== semanas.length-1) return '';
+      return `<text class="trend-axis-label" x="${(padL+i*bandW+bandW/2).toFixed(1)}" y="${H-6}" text-anchor="middle">${s}</text>`;
+    }).join('');
+
+    const barsHtml = semanas.map((s,i)=>{
+      const total = totales[i];
+      const y = yForT(total);
+      const x = padL + i*bandW + gap/2;
+      const w = Math.max(1, bandW - gap);
+      const h = (padT+plotH) - y;
+      return `<rect class="trend-bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="var(--navy)" onclick='${onclickDrill('totalTendenciaSemana', (ciudades&&ciudades.length?ciudades.join(','):'todas')+'|'+s, 'Total · Semana '+String(s).padStart(2,'0'))}'><title>Semana ${String(s).padStart(2,'0')}: ${total} tickets</title></rect>`;
+    }).join('');
+
+    el.innerHTML = `<div class="trend-svg-wrap"><svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:${W}px;">
+      ${gridHtmlT}${xLabelsHtmlT}${barsHtml}
+    </svg></div>`;
+    legendEl.innerHTML = `<span class="item"><span class="dot" style="background:var(--navy)"></span>Total (todos los clusters${ciudades && ciudades.length ? ' de la ciudad filtrada' : ''})</span>`;
     return;
   }
 
@@ -1737,6 +1866,15 @@ function drill(mode, value, label){
     const [cl, sem] = value.split('|');
     rows = HIST.filter(d=>d.clusterNorm===cl && d.semana===Number(sem));
   }
+  else if(mode==='totalTendenciaSemana'){
+    const [ciuStr, sem] = value.split('|');
+    let permitidos = null;
+    if(ciuStr && ciuStr !== 'todas'){
+      permitidos = new Set();
+      ciuStr.split(',').forEach(id=>{ (CIUDAD_CLUSTERS[id]?.clusters||[]).forEach(c=>permitidos.add(c)); });
+    }
+    rows = HIST.filter(d=>d.clusterNorm && d.semana===Number(sem) && (!permitidos || permitidos.has(d.clusterNorm)));
+  }
   else if(mode==='cluster') rows = base.filter(d=>d.clusterNorm===value);
   else if(mode==='ciudad') rows = base.filter(d=>CIUDAD_CLUSTERS[value].clusters.includes(d.clusterNorm));
   else if(mode==='falla') rows = base.filter(d=>d.falla===value);
@@ -1762,7 +1900,7 @@ function drill(mode, value, label){
   else if(mode==='repMaxMin') rows = CURRENT_CUENTAS_VIGENTES.filter(d=>d.repetido60>=value);
   else if(mode==='cuenta') rows = cuentas.filter(d=>String(d.cuenta)===String(value));
   else rows = [];
-  const esTicket = mode==='clusterSemana' || mode==='repMax' || (MODO_CONTEO==='tickets' && CASCADA_MODOS_BASE.includes(mode));
+  const esTicket = mode==='clusterSemana' || mode==='totalTendenciaSemana' || mode==='repMax' || (MODO_CONTEO==='tickets' && CASCADA_MODOS_BASE.includes(mode));
   renderDrill(rows, label, esTicket);
 }
 

@@ -174,6 +174,7 @@
   .kpi.tono-rosa{background:linear-gradient(135deg,#8c0f34,var(--ctt-pink) 70%);}
   .kpi.tono-azul{background:linear-gradient(135deg,#0577A0,var(--blue) 70%);}
   .kpi.tono-amarillo{background:linear-gradient(135deg,var(--chart-gold-deep),var(--yellow) 75%);}
+  .kpi.tono-navy{background:linear-gradient(135deg,#000c24,var(--navy) 75%);}
 
   .mini-cols{
     display:flex;
@@ -903,7 +904,12 @@ function getSel(ddId){
 function aplicarFiltros(){
   const f = getFiltros();
   let rows = HIST;
-  if(f.semanas.length) rows = rows.filter(r=>f.semanas.includes(r.semana));
+  // Si hay un rango de fechas activo, este manda sobre la Semana seleccionada
+  // (que normalmente trae marcada una sola semana por default) -- si no, un
+  // rango tipo "1 al 31 de agosto" se combinaba en AND con esa semana y casi
+  // siempre daba 0 resultados por no traslaparse.
+  const usaRangoFechas = !!(f.desde || f.hasta);
+  if(!usaRangoFechas && f.semanas.length) rows = rows.filter(r=>f.semanas.includes(r.semana));
   if(f.ciudades.length){
     const clustersCiudad = new Set();
     f.ciudades.forEach(id=>{ (CIUDAD_CLUSTERS[id]?.clusters||[]).forEach(c=>clustersCiudad.add(c)); });
@@ -970,7 +976,11 @@ function etiquetaClusters(f){
 function renderBanner(filteredRows){
   const f = getFiltros();
   let sub = '';
-  if(!f.semanas.length || f.semanas.length===Array.from(new Set(HIST.map(r=>r.semana))).length){
+  if(f.desde || f.hasta){
+    const desdeTxt = f.desde ? formatoFechaCorta(f.desde) : '…';
+    const hastaTxt = f.hasta ? formatoFechaCorta(f.hasta) : '…';
+    sub = `Rango de fechas: ${desdeTxt} – ${hastaTxt}`;
+  } else if(!f.semanas.length || f.semanas.length===Array.from(new Set(HIST.map(r=>r.semana))).length){
     const semanas = Array.from(new Set(HIST.map(r=>r.semana))).sort((a,b)=>a-b);
     sub = `Todas las semanas (histórico, Sem ${String(semanas[0]).padStart(2,'0')} a Sem ${String(semanas[semanas.length-1]).padStart(2,'0')})`;
   } else if(f.semanas.length===1){
@@ -987,12 +997,15 @@ function renderBanner(filteredRows){
   }
   sub += etiquetaCiudades(f);
   sub += etiquetaClusters(f);
-  if(f.desde || f.hasta) sub += ` · Rango: ${f.desde||'…'} a ${f.hasta||'…'}`;
-  sub += ' · TR = ticket repetido (2+ apariciones de la cuenta esa semana)';
   document.getElementById('bannerSub').textContent = sub;
 }
 
 function etiquetaPeriodo(f){
+  if(f.desde || f.hasta){
+    const desdeTxt = f.desde ? formatoFechaCorta(f.desde) : '…';
+    const hastaTxt = f.hasta ? formatoFechaCorta(f.hasta) : '…';
+    return `${desdeTxt} - ${hastaTxt}`;
+  }
   return etiquetaSemanas(f.semanas, false);
 }
 
@@ -1075,13 +1088,60 @@ function baseClientesPNM(f){
   return {valor: row.base_usuarios, label: `(más reciente de la selección: semana ${String(row.semana).padStart(2,'0')})`};
 }
 
+function formatoFechaCorta(iso){
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+// Promedio de tickets por semana segun el periodo seleccionado en el filtro:
+// - Rango de fechas activo (Desde/Hasta) -> promedio de esas fechas.
+// - 2+ semanas marcadas -> promedio de esas semanas.
+// - 0 o 1 semana marcada (incluye el estado por defecto al abrir) -> promedio
+//   de TODO el historico, porque una sola semana no da un promedio util.
+// En todos los casos respeta los filtros de Ciudad/Cluster activos.
+function calcularPromedio(f){
+  let clustersPermitidos = null;
+  if(f.ciudades.length){
+    clustersPermitidos = new Set();
+    f.ciudades.forEach(id=>{ (CIUDAD_CLUSTERS[id]?.clusters||[]).forEach(c=>clustersPermitidos.add(c)); });
+  }
+  if(f.clusters.length){
+    const soloClusters = new Set(f.clusters);
+    clustersPermitidos = clustersPermitidos ? new Set([...clustersPermitidos].filter(c=>soloClusters.has(c))) : soloClusters;
+  }
+  const pasaCiudadCluster = r => !clustersPermitidos || clustersPermitidos.has(r.clusterNorm);
+
+  if(f.desde || f.hasta){
+    const tsDesde = tsFromInput(f.desde, false);
+    const tsHasta = tsFromInput(f.hasta, true);
+    const rows = HIST.filter(r => pasaCiudadCluster(r) &&
+      (tsDesde===null || (r.fechaTS!==null && r.fechaTS>=tsDesde)) &&
+      (tsHasta===null || (r.fechaTS!==null && r.fechaTS<=tsHasta)));
+    const nSemanas = Math.max(1, new Set(rows.map(r=>r.semana)).size);
+    const desdeTxt = f.desde ? formatoFechaCorta(f.desde) : '…';
+    const hastaTxt = f.hasta ? formatoFechaCorta(f.hasta) : '…';
+    return { valor: Math.round(rows.length/nSemanas), label: `PROMEDIO ${desdeTxt} - ${hastaTxt}` };
+  }
+
+  if(f.semanas.length >= 2){
+    const rows = HIST.filter(r => pasaCiudadCluster(r) && f.semanas.includes(r.semana));
+    const orden = [...f.semanas].sort((a,b)=>a-b);
+    return { valor: Math.round(rows.length/f.semanas.length), label: `PROMEDIO SEM ${String(orden[0]).padStart(2,'0')} - SEM ${String(orden[orden.length-1]).padStart(2,'0')}` };
+  }
+
+  const rows = HIST.filter(pasaCiudadCluster);
+  const nSemanas = Math.max(1, new Set(HIST.map(r=>r.semana)).size);
+  return { valor: Math.round(rows.length/nSemanas), label: 'PROMEDIO TOTAL' };
+}
+
 function renderKPIs(cuentas, totalTickets, repetidos){
   const f = getFiltros();
   const total = cuentas.length;
   const con4mas = cuentas.filter(c=>c.trTotal>=4);
-  const periodoLabel = etiquetaPeriodo(f) + (f.desde||f.hasta ? ` · ${f.desde||'…'} a ${f.hasta||'…'}` : '');
+  const periodoLabel = etiquetaPeriodo(f);
   const porCluster = countBy(cuentas,'clusterNorm');
   const base = baseClientesPNM(f);
+  const promedio = calcularPromedio(f);
 
   let cards = `
     <div class="kpi tono-verde">
@@ -1089,6 +1149,12 @@ function renderKPIs(cuentas, totalTickets, repetidos){
       <div class="label">Total Tickets</div>
       <div class="value clickable" onclick='${onclickDrill('allTickets',null,'Total Tickets CTT')}'>${totalTickets}</div>
       <div class="sub">${periodoLabel}</div>
+    </div>
+    <div class="kpi tono-navy">
+      <div class="icon">➗</div>
+      <div class="label">Promedio de Tickets CTT</div>
+      <div class="value">${promedio.valor}</div>
+      <div class="sub">${promedio.label}</div>
     </div>
     <div class="kpi tono-morado">
       <div class="icon">👤</div>
