@@ -77,9 +77,11 @@
      de ancho fijo (grid) para que OS/tecnico/fecha empiecen siempre en
      la misma posicion en todas las tarjetas -- mas facil de leer en
      lista que separado solo con puntos. */
-  /* Misma plantilla de columnas en las dos filas (aunque "anterior" no
-     use la 5a columna) -- si no, el espacio flexible se reparte distinto
-     en cada fila y la fecha no cae alineada entre "Anterior" y "Nueva". */
+  /* Misma plantilla de columnas en las dos filas -- si no, el espacio
+     flexible se reparte distinto en cada fila y la fecha no cae alineada
+     entre "Anterior" y "Nueva". Desde 2026-09-24 la 5a columna de
+     "anterior" tambien se usa (Estatus/Estado de la orden anterior --
+     Terminada o Cancelada, ver ANTERIOR_VALIDOS en rr_tiempo_real_procesar.py). */
   .bloque-os{
     display:grid;grid-template-columns:64px 96px minmax(170px,1fr) 132px 1fr;column-gap:14px;
     font-size:13px;color:var(--muted);margin-top:6px;align-items:baseline;
@@ -163,7 +165,7 @@ const SHEET_ID = '1Pyl_vmwMjy7PXhz8NzoK6xfZwAhW0vCb_tbL1MZtqAE';
 const TAB = 'vigentes'; // foto en vivo, solo lo rescatable AHORA -- el historico completo vive en la pestaña "candidatos" del Sheet
 const API_KEY = 'AIzaSyASHf7J097a_nD6sSJxZHo7kiDn_edntuc';
 const URL_SHEET = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/`
-  + encodeURIComponent(`'${TAB}'!A2:O5000`) + `?key=${API_KEY}`;
+  + encodeURIComponent(`'${TAB}'!A2:Q5000`) + `?key=${API_KEY}`;
 
 const TAB_ESTADO = 'estado'; // pestaña aparte, escrita por rr_tiempo_real_automatizar.py en transiciones de sesion
 const URL_SHEET_ESTADO = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/`
@@ -393,9 +395,10 @@ async function revisar(){
   const candidatos = filas.map(c => ({
     rrN: fila(c,0), cuenta: fila(c,1), titular: fila(c,2),
     osAnterior: fila(c,3), tecnicoAnterior: fila(c,4), fechaAnterior: fila(c,5),
-    osNuevo: fila(c,6), ticket: fila(c,7), tecnico: fila(c,8), fechaVisita: fila(c,9),
-    dias: fila(c,10), subtipo: fila(c,11),
-    estatus: fila(c,12), estadoVisita: fila(c,13), cluster: fila(c,14),
+    estatusAnterior: fila(c,6), estadoAnterior: fila(c,7),
+    osNuevo: fila(c,8), ticket: fila(c,9), tecnico: fila(c,10), fechaVisita: fila(c,11),
+    dias: fila(c,12), subtipo: fila(c,13),
+    estatus: fila(c,14), estadoVisita: fila(c,15), cluster: fila(c,16),
   })).filter(c => c.osNuevo);
 
   const nuevos = candidatos.filter(c => !vistos.has(c.osNuevo));
@@ -435,7 +438,7 @@ async function revisar(){
         <div class="badge-rr">${c.rrN || 'RR'}</div>
         <div class="card-detalle">
           <b>Cuenta ${c.cuenta}</b>${c.titular ? ' · ' + c.titular : ''}<span class="etiqueta-categoria rescatable">🚨 RESCATABLE — aún se puede cancelar</span>
-          <div class="bloque-os anterior"><span class="etq">Anterior</span><code>${c.osAnterior}</code><span>${c.tecnicoAnterior || 'Sin técnico asignado'}</span><span>${c.fechaAnterior || '—'}</span><span></span></div>
+          <div class="bloque-os anterior"><span class="etq">Anterior</span><code>${c.osAnterior}</code><span>${c.tecnicoAnterior || 'Sin técnico asignado'}</span><span>${c.fechaAnterior || '—'}</span><span>${c.estatusAnterior ? '<b>' + c.estatusAnterior + '</b>' : ''}${c.estadoAnterior ? ' / ' + c.estadoAnterior : ''}</span></div>
           <div class="bloque-os nueva"><span class="etq">Nueva</span><code>${c.osNuevo}</code><span>${c.tecnico || 'Sin técnico asignado'}</span><span>${c.fechaVisita}</span><span><b>${c.estatus}</b>${c.estadoVisita ? ' / ' + c.estadoVisita : ''}</span></div>
           <div class="meta">${c.subtipo} · Cluster: <b>${clusterNorm || '—'}</b>${zonaAbrev ? ' <span class="zona">' + zonaAbrev + '</span>' : ''}${proveedor ? ' / <span class="proveedor">' + proveedor + '</span>' + (SUPERVISORES_POR_PROVEEDOR[proveedor] ? ' <span class="supervisores">(' + SUPERVISORES_POR_PROVEEDOR[proveedor] + ')</span>' : '') : ''} · ${c.dias} días de diferencia</div>
         </div>
