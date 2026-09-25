@@ -360,6 +360,15 @@
   .trend-legend.hovering .item{opacity:.4;}
   .trend-legend.hovering .item.active{opacity:1;font-weight:800;color:#1a1a1a;}
 
+  /* --- Tooltip flotante de la Tendencia por Cluster (desglose por variante) --- */
+  .tt-cluster{position:fixed;display:none;z-index:9999;pointer-events:none;
+    background:rgba(20,22,30,.94);color:#fff;border-radius:7px;padding:8px 11px;
+    font-size:11.5px;line-height:1.5;box-shadow:0 4px 14px rgba(0,0,0,.35);min-width:120px;}
+  .tt-cluster .tt-title{font-weight:700;margin-bottom:4px;font-size:11.5px;}
+  .tt-cluster .tt-row{display:flex;justify-content:space-between;gap:14px;white-space:nowrap;}
+  .tt-cluster .tt-row+.tt-row{margin-top:1px;}
+  .tt-cluster .tt-total{margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,.25);font-weight:700;}
+
   /* --- Dona (Por Ciudad) --- */
   .donut-wrap{display:flex;align-items:center;justify-content:center;padding:10px 12px 6px;}
   .donut-slice-g{transition:opacity .15s ease;}
@@ -616,6 +625,15 @@ function colorParaCluster(cl){
   for(let i=0;i<cl.length;i++) hash = (hash*31 + cl.charCodeAt(i)) >>> 0;
   return CLUSTER_COLOR_RESERVA[hash % CLUSTER_COLOR_RESERVA.length];
 }
+// Solo para la grafica de Tendencia por Cluster: agrupa cada variante (_A,
+// _2_A, _3_A... y "AMPLIACION XOCHIPILLI") con su cluster base, unicamente
+// para dibujar UNA linea por cluster real. El resto del dashboard sigue
+// tratando cada variante por separado -- ver [[feedback_cluster_variants]].
+const CLUSTER_ALIAS_TENDENCIA = {'AMPLIACION XOCHIPILLI':'XOCHIPILLI'};
+function clusterBaseTendencia(cl){
+  if(CLUSTER_ALIAS_TENDENCIA[cl]) return CLUSTER_ALIAS_TENDENCIA[cl];
+  return cl.replace(/_(\d+_)?A$/, '');
+}
 
 // Categorias de Nivel 1 conocidas al historico Sem01-33 (19 valores, ya
 // normalizadas sin acentos/mayusculas via strip_accents_upper en el build).
@@ -727,6 +745,48 @@ function cambiarModoTendencia(modo){
   });
   renderTendenciaCluster(getFiltros().ciudades);
 }
+
+// --- Tooltip flotante de la Tendencia por Cluster: desglosa por variante
+// exacta (ACEREROS, ACEREROS_A, ACEREROS_2_A...) + TOTAL cuando el cluster
+// tiene subsecciones; una sola linea cuando no las tiene. Sin porcentajes. ---
+let GRUPOS_TENDENCIA = {}; // base -> [clusterNorm exactos] de la ultima renderizada
+function ttClusterEl(){
+  let e = document.getElementById('ttCluster');
+  if(!e){ e = document.createElement('div'); e.id = 'ttCluster'; e.className = 'tt-cluster'; document.body.appendChild(e); }
+  return e;
+}
+function onhoverTendencia(base, semana){
+  return (`mostrarTT(event,${JSON.stringify(base)},${semana})`).replace(/'/g,'&#39;');
+}
+function mostrarTT(evt, base, semana){
+  const variantes = (GRUPOS_TENDENCIA[base]||[base]).slice().sort();
+  let filas;
+  if(variantes.length>1){
+    filas = variantes.map(cl=>[prettyLabel(cl), HIST.filter(r=>r.clusterNorm===cl && r.semana===semana).length]);
+    const total = filas.reduce((a,f)=>a+f[1],0);
+    filas.push(['TOTAL', total, true]);
+  } else {
+    filas = [[prettyLabel(base), HIST.filter(r=>r.clusterNorm===base && r.semana===semana).length]];
+  }
+  const tt = ttClusterEl();
+  tt.innerHTML = `<div class="tt-title">Semana ${String(semana).padStart(2,'0')}</div>` +
+    filas.map(([label,n,esTotal])=>`<div class="tt-row${esTotal?' tt-total':''}"><span>${label}</span><span>${n}</span></div>`).join('');
+  tt.style.display = 'block';
+  posicionarTT(evt);
+}
+function moverTT(evt){ if(ttClusterEl().style.display==='block') posicionarTT(evt); }
+function ocultarTT(){ ttClusterEl().style.display = 'none'; }
+function posicionarTT(evt){
+  const tt = ttClusterEl();
+  const pad = 14;
+  let x = evt.clientX + pad, y = evt.clientY + pad;
+  const r = tt.getBoundingClientRect();
+  if(x + r.width > window.innerWidth - 8) x = evt.clientX - r.width - pad;
+  if(y + r.height > window.innerHeight - 8) y = evt.clientY - r.height - pad;
+  tt.style.left = x + 'px';
+  tt.style.top = y + 'px';
+}
+
 let CURRENT_REPETIDOS = [];
 let CURRENT_FILTERED_ROWS = [];
 let RESUMEN_OCULTO = false;
@@ -1569,12 +1629,20 @@ function renderTendenciaCluster(ciudades){
   const legendEl = document.getElementById('legendTendenciaCluster');
 
   const semanas = Array.from(new Set(HIST.map(r=>r.semana))).sort((a,b)=>a-b);
-  let clusters = Array.from(new Set(HIST.filter(r=>r.clusterNorm).map(r=>r.clusterNorm))).sort();
+  let clustersExactos = Array.from(new Set(HIST.filter(r=>r.clusterNorm).map(r=>r.clusterNorm))).sort();
   if(ciudades && ciudades.length){
     const permitidos = new Set();
     ciudades.forEach(id=>{ (CIUDAD_CLUSTERS[id]?.clusters||[]).forEach(c=>permitidos.add(c)); });
-    clusters = clusters.filter(cl=>permitidos.has(cl));
+    clustersExactos = clustersExactos.filter(cl=>permitidos.has(cl));
   }
+  // Agrupa las variantes exactas en su cluster base -- una linea por cluster
+  // real en esta grafica (ver clusterBaseTendencia arriba).
+  GRUPOS_TENDENCIA = {};
+  clustersExactos.forEach(cl=>{
+    const base = clusterBaseTendencia(cl);
+    (GRUPOS_TENDENCIA[base] = GRUPOS_TENDENCIA[base]||[]).push(cl);
+  });
+  let clusters = Object.keys(GRUPOS_TENDENCIA).sort();
   if(!semanas.length || !clusters.length){
     el.innerHTML = '<div class="vacio">Sin datos</div>';
     legendEl.innerHTML = '';
@@ -1582,7 +1650,7 @@ function renderTendenciaCluster(ciudades){
   }
 
   if(MODO_TENDENCIA === 'total'){
-    const clusterSet = new Set(clusters);
+    const clusterSet = new Set(clustersExactos);
     const idxSemanaTotal = new Map(semanas.map((s,i)=>[s,i]));
     const totales = semanas.map(()=>0);
     HIST.forEach(r=>{
@@ -1627,14 +1695,18 @@ function renderTendenciaCluster(ciudades){
   }
 
   const idxPorSemana = new Map(semanas.map((s,i)=>[s,i]));
-  const datos = {};
-  clusters.forEach(cl=>{ datos[cl] = semanas.map(s=>({semana:s, tickets:0})); });
+  const datosExacto = {};
+  clustersExactos.forEach(cl=>{ datosExacto[cl] = semanas.map(()=>0); });
   HIST.forEach(r=>{
-    if(!r.clusterNorm || !datos[r.clusterNorm]) return;
-    datos[r.clusterNorm][idxPorSemana.get(r.semana)].tickets++;
+    if(!r.clusterNorm || !datosExacto[r.clusterNorm]) return;
+    datosExacto[r.clusterNorm][idxPorSemana.get(r.semana)]++;
+  });
+  const datos = {}; // base -> [tickets por semana], suma de sus variantes
+  clusters.forEach(base=>{
+    datos[base] = semanas.map((s,i)=> GRUPOS_TENDENCIA[base].reduce((acc,cl)=>acc+datosExacto[cl][i],0));
   });
 
-  const maxTickets = Math.max(1, ...clusters.flatMap(cl=>datos[cl].map(d=>d.tickets)));
+  const maxTickets = Math.max(1, ...clusters.flatMap(cl=>datos[cl]));
   const {ticks, niceMax} = niceTicks(maxTickets);
 
   const W = Math.max(760, semanas.length*34), H = 260, padL = 34, padR = 12, padT = 10, padB = 24;
@@ -1656,9 +1728,10 @@ function renderTendenciaCluster(ciudades){
 
   const lineasHtml = clusters.map((cl,ci)=>{
     const color = colorParaCluster(cl);
-    const pts = datos[cl].map((d,i)=>`${xFor(i).toFixed(1)},${yFor(d.tickets).toFixed(1)}`).join(' ');
-    const dotsHtml = datos[cl].map((d,i)=>
-      `<circle class="trend-dot" cx="${xFor(i).toFixed(1)}" cy="${yFor(d.tickets).toFixed(1)}" r="2.3" fill="${color}" onclick='${onclickDrill('clusterSemana', cl+'|'+d.semana, 'Cluster: '+prettyLabel(cl)+' · Semana '+String(d.semana).padStart(2,'0'))}'><title>Semana ${String(d.semana).padStart(2,'0')}: ${d.tickets} tickets</title></circle>`
+    const serie = datos[cl];
+    const pts = serie.map((v,i)=>`${xFor(i).toFixed(1)},${yFor(v).toFixed(1)}`).join(' ');
+    const dotsHtml = serie.map((v,i)=>
+      `<circle class="trend-dot" cx="${xFor(i).toFixed(1)}" cy="${yFor(v).toFixed(1)}" r="2.3" fill="${color}" onmouseenter='${onhoverTendencia(cl, semanas[i])}' onmousemove='moverTT(event)' onmouseleave='ocultarTT()' onclick='${onclickDrill('clusterSemana', cl+'|'+semanas[i], 'Cluster: '+prettyLabel(cl)+' · Semana '+String(semanas[i]).padStart(2,'0'))}'></circle>`
     ).join('');
     return `<g class="trend-line-g" data-idx="${ci}">
       <polyline class="trend-line-hit" points="${pts}"/>
@@ -1811,7 +1884,9 @@ function drill(mode, value, label){
   else if(mode==='repetidosSemana') rows = CURRENT_REPETIDOS;
   else if(mode==='clusterSemana'){
     const [cl, sem] = value.split('|');
-    rows = HIST.filter(d=>d.clusterNorm===cl && d.semana===Number(sem));
+    // cl es el cluster BASE de la Tendencia (ya unificado) -- incluye todas
+    // sus variantes exactas, ver clusterBaseTendencia.
+    rows = HIST.filter(d=>d.clusterNorm && clusterBaseTendencia(d.clusterNorm)===cl && d.semana===Number(sem));
   }
   else if(mode==='totalTendenciaSemana'){
     const [ciuStr, sem] = value.split('|');

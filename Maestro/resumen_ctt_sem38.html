@@ -48,6 +48,11 @@
   .trend-legend{display:flex; flex-wrap:wrap; gap:6px 12px; padding:0 12px 12px; font-size:10px; color:#444;}
   .trend-legend .item{display:flex; align-items:center; gap:4px;}
   .trend-legend .dot{width:8px; height:8px; border-radius:50%; display:inline-block;}
+  .tt-cluster{position:fixed; display:none; z-index:9999; pointer-events:none; background:rgba(20,22,30,.94); color:#fff; border-radius:7px; padding:8px 11px; font-size:11.5px; line-height:1.5; box-shadow:0 4px 14px rgba(0,0,0,.35); min-width:120px;}
+  .tt-cluster .tt-title{font-weight:700; margin-bottom:4px; font-size:11.5px;}
+  .tt-cluster .tt-row{display:flex; justify-content:space-between; gap:14px; white-space:nowrap;}
+  .tt-cluster .tt-row+.tt-row{margin-top:1px;}
+  .tt-cluster .tt-total{margin-top:4px; padding-top:4px; border-top:1px solid rgba(255,255,255,.25); font-weight:700;}
   .ver-completo{display:inline-block; margin-bottom:14px; font-size:11.5px; font-weight:700; color:var(--navy); background:#fff; border:1px solid #ccd3e0; border-radius:8px; padding:6px 12px; text-decoration:none;}
   .ver-completo:hover{background:#eef1f6;}
 </style>
@@ -108,6 +113,51 @@ function colorParaCluster(cl){
   let hash=0; for(let i=0;i<cl.length;i++) hash=(hash*31+cl.charCodeAt(i))>>>0;
   return CLUSTER_COLOR_RESERVA[hash%CLUSTER_COLOR_RESERVA.length];
 }
+// Solo para esta grafica: agrupa cada variante (_A, _2_A, _3_A... y
+// "AMPLIACION XOCHIPILLI") con su cluster base -- ver [[feedback_cluster_variants]].
+const CLUSTER_ALIAS_TENDENCIA = {'AMPLIACION XOCHIPILLI':'XOCHIPILLI'};
+function clusterBaseTendencia(cl){
+  if(CLUSTER_ALIAS_TENDENCIA[cl]) return CLUSTER_ALIAS_TENDENCIA[cl];
+  return cl.replace(/_(\d+_)?A$/, '');
+}
+let GRUPOS_TENDENCIA = {};
+function ttClusterEl(){
+  let e = document.getElementById('ttCluster');
+  if(!e){ e = document.createElement('div'); e.id = 'ttCluster'; e.className = 'tt-cluster'; document.body.appendChild(e); }
+  return e;
+}
+function onhoverTendencia(base, semana){
+  return (`mostrarTT(event,${JSON.stringify(base)},${semana})`).replace(/'/g,'&#39;');
+}
+function mostrarTT(evt, base, semana){
+  const variantes = (GRUPOS_TENDENCIA[base]||[base]).slice().sort();
+  const idx = TENDENCIA_DATA.semanas.indexOf(semana);
+  let filas;
+  if(variantes.length>1){
+    filas = variantes.map(cl=>[prettyLabel(cl), (TENDENCIA_DATA.series[cl]||[])[idx]||0]);
+    const total = filas.reduce((a,f)=>a+f[1],0);
+    filas.push(['TOTAL', total, true]);
+  } else {
+    filas = [[prettyLabel(base), (TENDENCIA_DATA.series[base]||[])[idx]||0]];
+  }
+  const tt = ttClusterEl();
+  tt.innerHTML = `<div class="tt-title">Semana ${String(semana).padStart(2,'0')}</div>` +
+    filas.map(([label,n,esTotal])=>`<div class="tt-row${esTotal?' tt-total':''}"><span>${label}</span><span>${n}</span></div>`).join('');
+  tt.style.display = 'block';
+  posicionarTT(evt);
+}
+function moverTT(evt){ if(ttClusterEl().style.display==='block') posicionarTT(evt); }
+function ocultarTT(){ ttClusterEl().style.display = 'none'; }
+function posicionarTT(evt){
+  const tt = ttClusterEl();
+  const pad = 14;
+  let x = evt.clientX + pad, y = evt.clientY + pad;
+  const r = tt.getBoundingClientRect();
+  if(x + r.width > window.innerWidth - 8) x = evt.clientX - r.width - pad;
+  if(y + r.height > window.innerHeight - 8) y = evt.clientY - r.height - pad;
+  tt.style.left = x + 'px';
+  tt.style.top = y + 'px';
+}
 function niceTicks(maxValue, targetCount){
   targetCount = targetCount || 5;
   if(!maxValue || maxValue <= 0) return {ticks:[0,1], niceMax:1};
@@ -139,12 +189,18 @@ function renderTendencia(){
   const el = document.getElementById('chartTendencia');
   const legendEl = document.getElementById('legendTendencia');
   const semanas = TENDENCIA_DATA.semanas;
-  const clusters = Object.keys(TENDENCIA_DATA.series).sort();
+  const clustersExactos = Object.keys(TENDENCIA_DATA.series).sort();
+  GRUPOS_TENDENCIA = {};
+  clustersExactos.forEach(cl=>{
+    const base = clusterBaseTendencia(cl);
+    (GRUPOS_TENDENCIA[base] = GRUPOS_TENDENCIA[base]||[]).push(cl);
+  });
+  const clusters = Object.keys(GRUPOS_TENDENCIA).sort();
   const W = Math.max(720, semanas.length*30), H = 240, padL = 34, padR = 12, padT = 10, padB = 22;
   const plotW = W - padL - padR, plotH = H - padT - padB;
 
   if(MODO_TENDENCIA === 'total'){
-    const totales = semanas.map((s,i)=>clusters.reduce((acc,cl)=>acc+TENDENCIA_DATA.series[cl][i],0));
+    const totales = semanas.map((s,i)=>clustersExactos.reduce((acc,cl)=>acc+TENDENCIA_DATA.series[cl][i],0));
     const maxTotal = Math.max(1, ...totales);
     const {ticks, niceMax} = niceTicks(maxTotal);
     const bandW = plotW / semanas.length;
@@ -173,7 +229,11 @@ function renderTendencia(){
     return;
   }
 
-  const maxTickets = Math.max(1, ...clusters.flatMap(cl=>TENDENCIA_DATA.series[cl]));
+  const datos = {}; // base -> [tickets por semana], suma de sus variantes
+  clusters.forEach(base=>{
+    datos[base] = semanas.map((s,i)=> GRUPOS_TENDENCIA[base].reduce((acc,cl)=>acc+TENDENCIA_DATA.series[cl][i],0));
+  });
+  const maxTickets = Math.max(1, ...clusters.flatMap(cl=>datos[cl]));
   const {ticks, niceMax} = niceTicks(maxTickets);
   const xFor = i => padL + (semanas.length>1 ? i/(semanas.length-1)*plotW : plotW/2);
   const yFor = v => padT + plotH - (v/niceMax*plotH);
@@ -189,9 +249,9 @@ function renderTendencia(){
   }).join('');
   const lineasHtml = clusters.map((cl,ci)=>{
     const color = colorParaCluster(cl);
-    const serie = TENDENCIA_DATA.series[cl];
+    const serie = datos[cl];
     const pts = serie.map((v,i)=>`${xFor(i).toFixed(1)},${yFor(v).toFixed(1)}`).join(' ');
-    const dotsHtml = serie.map((v,i)=>`<circle class="trend-dot" cx="${xFor(i).toFixed(1)}" cy="${yFor(v).toFixed(1)}" r="2" fill="${color}"><title>${prettyLabel(cl)} · Semana ${String(semanas[i]).padStart(2,'0')}: ${v} tickets</title></circle>`).join('');
+    const dotsHtml = serie.map((v,i)=>`<circle class="trend-dot" cx="${xFor(i).toFixed(1)}" cy="${yFor(v).toFixed(1)}" r="2" fill="${color}" onmouseenter='${onhoverTendencia(cl, semanas[i])}' onmousemove='moverTT(event)' onmouseleave='ocultarTT()'></circle>`).join('');
     return `<g><polyline class="trend-line-hit" points="${pts}"/><polyline class="trend-line" points="${pts}" stroke="${color}"/>${dotsHtml}</g>`;
   }).join('');
   el.innerHTML = `<div style="overflow-x:auto;"><svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:${W}px;">${gridHtml}${xLabelsHtml}${lineasHtml}</svg></div>`;

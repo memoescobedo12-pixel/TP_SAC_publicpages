@@ -257,6 +257,16 @@ const CIUDAD_CLUSTERS = {
 function clustersDeCiudades(ids){
   return ids.flatMap(id=>CIUDAD_CLUSTERS[id]?.clusters||[]);
 }
+// Solo para la grafica de Tendencia por Cluster: agrupa cada variante (_A,
+// _2_A, _3_A... y "AMPLIACION XOCHIPILLI") con su cluster base, unicamente
+// para dibujar UNA linea por cluster real. El resto del dashboard (filtros,
+// tablas, drill-downs) sigue tratando cada variante por separado -- ver
+// [[feedback_cluster_variants]].
+const CLUSTER_ALIAS_TENDENCIA = {'AMPLIACION XOCHIPILLI':'XOCHIPILLI'};
+function clusterBaseTendencia(cl){
+  if(CLUSTER_ALIAS_TENDENCIA[cl]) return CLUSTER_ALIAS_TENDENCIA[cl];
+  return cl.replace(/_(\d+_)?A$/, '');
+}
 function cambiarModoTipo(modo){
   if(MODO_TIPO===modo) return;
   MODO_TIPO = modo;
@@ -548,13 +558,22 @@ function renderTendenciaCluster(){
 
   const clSel = getSel('ms-cl-dd');
   const ciuSel = getSel('ms-ciu-dd');
-  let clusters = DATA.clusters;
-  if(clSel.length) clusters = clSel;
-  else if(ciuSel.length) clusters = clustersDeCiudades(ciuSel);
+  let clustersExactos = DATA.clusters;
+  if(clSel.length) clustersExactos = clSel;
+  else if(ciuSel.length) clustersExactos = clustersDeCiudades(ciuSel);
+  // Agrupa las variantes exactas en su cluster base -- una linea por cluster
+  // real en esta grafica (ver clusterBaseTendencia arriba).
+  const gruposTendencia = {};
+  clustersExactos.forEach(cl=>{
+    const base = clusterBaseTendencia(cl);
+    (gruposTendencia[base] = gruposTendencia[base]||[]).push(cl);
+  });
+  const clusters = Object.keys(gruposTendencia).sort();
   const colores = ['#001F5B','#8DC63F','#E8003D','#00AEEF','#F5A623','#8B5CF6','#92278F','#ED1C5E','#5C9A1B','#0577A0','#B9750E','#6D28D9'];
 
   const datasets = clusters.map((cl,i)=>{
-    const serie = semanas.map(s=>filtradosTendencia.filter(r=>r.s===s && r.cl===cl).length);
+    const variantes = gruposTendencia[cl];
+    const serie = semanas.map(s=>filtradosTendencia.filter(r=>r.s===s && variantes.includes(r.cl)).length);
     return {label:cl, data:serie, borderColor:colores[i%colores.length], backgroundColor:colores[i%colores.length], borderWidth:2, tension:0.25, fill:false, pointRadius:2.5};
   });
 
@@ -579,9 +598,16 @@ function renderTendenciaCluster(){
           }
         },
         tooltip:{callbacks:{label:ctx=>{
-          const total = semanas.reduce((a,s,idx)=>a+ctx.chart.data.datasets[ctx.datasetIndex].data[idx],0);
-          const v = ctx.parsed.y;
-          return ` ${ctx.dataset.label}: ${v} (${pct(v, total-v)}% del año de este cluster)`;
+          const base = ctx.dataset.label;
+          const semana = semanas[ctx.dataIndex];
+          const variantes = (gruposTendencia[base]||[base]).slice().sort();
+          if(variantes.length>1){
+            const filas = variantes.map(cl=>`${cl}: ${filtradosTendencia.filter(r=>r.s===semana && r.cl===cl).length}`);
+            const total = variantes.reduce((a,cl)=>a+filtradosTendencia.filter(r=>r.s===semana && r.cl===cl).length,0);
+            filas.push(`TOTAL: ${total}`);
+            return filas;
+          }
+          return `${base}: ${ctx.parsed.y}`;
         }}}
       },
       scales:{y:{beginAtZero:true, ticks:{stepSize:10}, title:{display:true,text:'Cancelaciones'}}}
