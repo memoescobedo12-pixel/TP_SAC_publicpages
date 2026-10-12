@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>Ranking Suspendidos — SAC Piedras Negras / Monclova</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
   :root{
     --navy:#001F5B;
@@ -126,7 +127,8 @@ function renderSeccionCluster(histCluster){
       const dL = f.lugarActual - f.lugarAnterior;
       dLugarHtml = dL === 0 ? '<span class="flat">— 0</span>' : (dL > 0 ? `<span class="down">▼ +${dL}</span>` : `<span class="up">▲ ${dL}</span>`);
     }
-    return `<tr><td>#${f.lugarActual}</td><td>${esc(f.cluster)}</td><td class="num">${fmtNum(f.actual.base)}</td><td class="num">${pctAnt}</td><td class="num">${f.actual.pct.toFixed(2)}%</td><td class="num">${dPtsHtml}</td><td class="num">${dLugarHtml}</td></tr>`;
+    const clientesAnt = f.anterior ? fmtNum(f.anterior.base) : '<span class="sindato">sin dato</span>';
+    return `<tr><td>#${f.lugarActual}</td><td>${esc(f.cluster)}</td><td class="num">${clientesAnt}</td><td class="num">${pctAnt}</td><td class="num">${fmtNum(f.actual.base)}</td><td class="num">${f.actual.pct.toFixed(2)}%</td><td class="num">${dPtsHtml}</td><td class="num">${dLugarHtml}</td></tr>`;
   }).join('');
 
   let filaMejoraronHtml = '<tr><td colspan="4" class="sindato">Aún no hay historial suficiente para comparar (primera semana registrada).</td></tr>';
@@ -156,6 +158,7 @@ function renderSeccionCluster(histCluster){
     ? `🏘️ Comparativa por Cluster — Semana ${semActual} vs Semana ${semAnterior}`
     : `🏘️ Comparativa por Cluster — Semana ${semActual} (primera semana registrada)`;
   const thAnt = semAnterior !== null ? `% Sem ${semAnterior}` : '% Sem anterior';
+  const thClientesAnt = semAnterior !== null ? `Clientes Sem ${semAnterior}` : 'Clientes Sem anterior';
 
   return `
     <div class="section" id="seccion-cluster">
@@ -163,10 +166,15 @@ function renderSeccionCluster(histCluster){
       <div class="sec-body">
         ${hallazgoHtml}
         <table>
-          <thead><tr><th>Lugar</th><th>Cluster</th><th class="num">Clientes</th><th class="num">${thAnt}</th><th class="num">% Sem ${semActual}</th><th class="num">Δ pts</th><th class="num">Δ Lugar</th></tr></thead>
+          <thead><tr><th>Lugar</th><th>Cluster</th><th class="num">${thClientesAnt}</th><th class="num">${thAnt}</th><th class="num">Clientes Sem ${semActual}</th><th class="num">% Sem ${semActual}</th><th class="num">Δ pts</th><th class="num">Δ Lugar</th></tr></thead>
           <tbody>${filasHtml}</tbody>
         </table>
       </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head">📍 Evolución por Cluster — % y Clientes (todas las semanas)</div>
+      <div class="sec-body"><canvas id="chartPuntosCluster" height="90"></canvas></div>
     </div>
 
     <div class="section">
@@ -179,6 +187,59 @@ function renderSeccionCluster(histCluster){
       <div class="sec-body"><table><thead><tr><th>Cluster</th><th class="num">Anterior</th><th class="num">Actual</th><th class="num">Δ pts</th></tr></thead><tbody>${filaMejoraronHtml}</tbody></table></div>
     </div>
   `;
+}
+
+function renderBarrasPropio(hist){
+  const PROPIO = 'Piedras Negras / Monclova';
+  const semanas = [...new Set(hist.map(r => r.semana))].sort((a,b) => a-b);
+  const serie = semanas.map(s => {
+    const r = filaPlazaSemana(hist, PROPIO, s);
+    return r ? r.pct : null;
+  });
+  const ctx = document.getElementById('chartBarrasPropio').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {labels: semanas.map(s => 'S'+String(s).padStart(2,'0')), datasets: [{label:'% Suspendidos', data: serie, backgroundColor:'#001F5B', borderRadius:4}]},
+    options: {
+      responsive: true,
+      plugins: {legend:{display:false}, tooltip:{callbacks:{label: ctx => `${ctx.formattedValue}%`}}},
+      scales: {y:{min:3, max:7, ticks:{stepSize:.5, callback:v=>v+'%'}}}
+    }
+  });
+}
+
+function renderPuntosCluster(histCluster){
+  if(!histCluster.length) return;
+  const semanas = [...new Set(histCluster.map(r => r.semana))].sort((a,b) => a-b);
+  const clusters = [...new Set(histCluster.map(r => r.cluster))].sort();
+  const paleta = ['#2E4C9E','#E0951A','#8B5CF6','#5C9A1B','#B9750E','#00AEEF','#E8003D','#17A398','#92278F'];
+  const colorMap = {}; clusters.forEach((c,i) => colorMap[c] = paleta[i % paleta.length]);
+  const datasets = clusters.map(cluster => {
+    const serie = semanas.map(s => {
+      const r = filaClusterSemana(histCluster, cluster, s);
+      return r ? r.pct : null;
+    });
+    return {label:cluster, data:serie, borderColor:colorMap[cluster], backgroundColor:colorMap[cluster], spanGaps:true, tension:.25, pointRadius:4, pointHoverRadius:6};
+  });
+  const ctx = document.getElementById('chartPuntosCluster').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {labels: semanas.map(s => 'S'+String(s).padStart(2,'0')), datasets},
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {position:'bottom', labels:{boxWidth:10, font:{size:10}}},
+        tooltip: {callbacks:{label: function(ctx){
+          const cluster = ctx.dataset.label;
+          const semana = semanas[ctx.dataIndex];
+          const r = filaClusterSemana(histCluster, cluster, semana);
+          if(!r) return `${cluster}: sin dato`;
+          return `${cluster}: ${r.pct.toFixed(2)}% · ${fmtNum(r.base)} clientes`;
+        }}}
+      },
+      scales: {y:{ticks:{callback:v=>v+'%'}}}
+    }
+  });
 }
 
 async function cargar(){
@@ -288,6 +349,11 @@ async function cargar(){
     </div>
 
     <div class="section">
+      <div class="sec-head">📊 Evolución % Suspendidos — Piedras Negras / Monclova (por semana)</div>
+      <div class="sec-body"><canvas id="chartBarrasPropio" height="80"></canvas></div>
+    </div>
+
+    <div class="section">
       <div class="sec-head red">⚠️ Top Empeoraron</div>
       <div class="sec-body"><table><thead><tr><th>Plaza</th><th class="num">Sem ${semAnterior}</th><th class="num">Sem ${semActual}</th><th class="num">Δ pts</th></tr></thead><tbody>${empeoraron.map(filaMov).join('') || '<tr><td colspan="4" class="sindato">Sin movimientos.</td></tr>'}</tbody></table></div>
     </div>
@@ -301,6 +367,8 @@ async function cargar(){
   `;
 
   document.getElementById('app').innerHTML = html;
+  renderBarrasPropio(hist);
+  renderPuntosCluster(histCluster);
 }
 
 cargar().catch(err => {
