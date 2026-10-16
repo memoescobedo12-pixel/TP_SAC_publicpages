@@ -453,7 +453,7 @@ function descargarDrillCSV(){
   DRILL_ROWS.forEach(r=>{
     lineas.push([r.sem,r.fecha,r.cuenta,r.gestora,r.motivo,r.cartera,r.cluster,r.comentario,r.solucion,r.herramienta].map(escapar).join(';'));
   });
-  const csv = '\ufeff' + lineas.join('\r\n');
+  const csv = '\ufeffsep=;\r\n' + lineas.join('\r\n');
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
   const nombreArchivo = 'Incidencias_' + DRILL_LABEL.replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,60) + '.csv';

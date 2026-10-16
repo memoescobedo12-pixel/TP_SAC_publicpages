@@ -2011,7 +2011,7 @@ function descargarDrillCSV(){
   CURRENT_DRILL_ROWS.forEach(d=>{
     lineas.push([d.cuenta, prettyLabel(d.cluster), prettyLabel(d.colonia), prettyLabel(d.falla), d.imputable||'', d.estado, d.ticket, d.folio||'', d.fecha].map(escapar).join(';'));
   });
-  const csv = '\ufeff' + lineas.join('\r\n');
+  const csv = '\ufeffsep=;\r\n' + lineas.join('\r\n');
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
   const nombreArchivo = 'RR_detalle_' + CURRENT_DRILL_LABEL.replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,60) + '.csv';

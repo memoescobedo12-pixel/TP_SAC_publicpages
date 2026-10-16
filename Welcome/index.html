@@ -677,7 +677,7 @@ function descargarCSV(pid){
   const header=['Cuenta','Cliente','Fecha Gestion','Fecha Activacion','Cluster','Canal','Plan','Coach','Resultado'];
   const lines=[header.join(';')];
   subset.forEach(r=>lines.push([r.cu,r.no,r.f,r.fa,r.cl,r.sc,r.pl,r.co,resultFn(r)].map(strip).join(';')));
-  const blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});
+  const blob=new Blob(['﻿sep=;\r\n'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download=pid+'_registros.csv';document.body.appendChild(a);a.click();a.remove();
   URL.revokeObjectURL(url);
