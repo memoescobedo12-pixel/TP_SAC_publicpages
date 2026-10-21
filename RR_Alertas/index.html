@@ -211,6 +211,7 @@ function guardarVistos(set){
   catch(e){}
 }
 let vistos = cargarVistos();
+const ausentes = new Map();  // osNuevo -> lecturas seguidas sin aparecer en vigentes
 
 function sonarAlerta(){
   if(!audioListo) return;
@@ -383,6 +384,10 @@ async function revisar(){
   try{
     const resp = await fetch(URL_SHEET + '&_=' + Date.now());
     const data = await resp.json();
+    // Una respuesta de error de la API (cuota, red) no trae "values": NO es
+    // "hoja vacia" -- si se tomara asi, se borrarian los vistos y todo
+    // volveria a sonar como nuevo.
+    if(!resp.ok || data.error) throw new Error('respuesta de error');
     filas = data.values || [];
   }catch(e){
     document.getElementById('estado').textContent = 'No se pudo consultar la hoja (revisa tu conexión).';
@@ -419,8 +424,15 @@ async function revisar(){
   }
   // limpiar del localStorage lo que ya no esta vigente, para que si vuelve
   // a aparecer mas adelante (otra racha) SI vuelva a notificar
+  // Solo se olvida un OS tras faltar en 3 lecturas seguidas (~90s): una
+  // lectura suelta que lo vea ausente (hoja a medio escribir) no debe
+  // hacer que vuelva a sonar.
   const osActuales = new Set(candidatos.map(c => c.osNuevo));
-  vistos.forEach(id => { if(!osActuales.has(id)) vistos.delete(id); });
+  vistos.forEach(id => {
+    if(osActuales.has(id)){ ausentes.delete(id); return; }
+    const n = (ausentes.get(id) || 0) + 1;
+    if(n >= 3){ vistos.delete(id); ausentes.delete(id); } else ausentes.set(id, n);
+  });
   guardarVistos(vistos);
 
   candidatos.sort((a,b) => Number(b.dias) - Number(a.dias));
