@@ -167,7 +167,7 @@ const SHEET_ID = '1Eq6oUxxhax6gfjMFbdiGbUVezZ-peIxz8A4nfg2PhSU';
 const API_KEY = 'AIzaSyASHf7J097a_nD6sSJxZHo7kiDn_edntuc';
 const urlRango = (id, rango) => `https://sheets.googleapis.com/v4/spreadsheets/${id}/values/`
   + encodeURIComponent(rango) + `?key=${API_KEY}`;
-const URL_ACTIVAS = urlRango(SHEET_ID, "'activas'!A2:L5000");
+const URL_ACTIVAS = urlRango(SHEET_ID, "'activas'!A2:M5000");
 const URL_CONTROL = urlRango(SHEET_ID, "'control'!B1");
 // Salud del detector: es el MISMO proceso que el de RR, asi que se lee su
 // pestana 'estado' (solo lectura, no se toca nada del Sheet de RR).
@@ -311,7 +311,7 @@ function pintar(){
       <div class="card-detalle">
         <b>Cuenta ${esc(a.cuenta)}</b>${a.cliente ? ' · '+esc(a.cliente) : ''}<span class="tipo">${esc(a.tipo)}</span>
         <div class="linea"><code>${esc(a.os)}</code> · ${esc(a.antes)} <span class="flecha">→</span> <b>${esc(a.ahora)}</b>${a.motivo ? ' · Motivo: <b>'+esc(a.motivo)+'</b>' : ''}</div>
-        <div class="linea">Técnico que la tenía: <b>${esc(a.tecnico || '—')}</b> · Cluster: <b>${esc(cn || '—')}</b>${zona ? ' <span class="zona">'+zona+'</span>' : ''}${a.agenda ? ' · Última agenda: <b>'+esc(a.agenda)+'</b>' : ''}</div>
+        <div class="linea">Técnico que la tenía: <b>${esc(a.tecnico || '—')}</b> · Cluster: <b>${esc(cn || '—')}</b>${zona ? ' <span class="zona">'+zona+'</span>' : ''}${a.agenda ? ' · Última agenda: <b>'+esc(a.agenda)+'</b>' : ''}${a.turno ? ' · <b>'+esc(a.turno)+'</b>' : ''}</div>
       </div>
       <div class="card-accion"><a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit" target="_blank">Ver histórico →</a></div>
     </div>`;
@@ -348,7 +348,7 @@ async function revisar(){
 
   alertas = filas.map(f => ({
     fecha:c(f,0), alerta:c(f,1), os:c(f,2), cuenta:c(f,3), cliente:c(f,4), tipo:c(f,5), cluster:c(f,6),
-    tecnico:c(f,7), antes:c(f,8), ahora:c(f,9), agenda:c(f,10), motivo:c(f,11),
+    tecnico:c(f,7), antes:c(f,8), ahora:c(f,9), agenda:c(f,10), turno:c(f,11), motivo:c(f,12),
   })).filter(a => a.os);
   alertas.forEach(a => a.llave = `${a.os}|${a.alerta}|${a.fecha}`);
   alertas.sort((a,b) => b.fecha.localeCompare(a.fecha));
