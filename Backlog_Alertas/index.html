@@ -185,7 +185,7 @@ const SHEET_ID = '1Eq6oUxxhax6gfjMFbdiGbUVezZ-peIxz8A4nfg2PhSU';
 const API_KEY = 'AIzaSyASHf7J097a_nD6sSJxZHo7kiDn_edntuc';
 const urlRango = (id, rango) => `https://sheets.googleapis.com/v4/spreadsheets/${id}/values/`
   + encodeURIComponent(rango) + `?key=${API_KEY}`;
-const URL_ACTIVAS = urlRango(SHEET_ID, "'activas'!A2:R5000");
+const URL_ACTIVAS = urlRango(SHEET_ID, "'activas'!A2:S5000");
 const URL_CONTROL = urlRango(SHEET_ID, "'control'!B1");
 // Salud del detector: es el MISMO proceso que el de RR, asi que se lee su
 // pestana 'estado' (solo lectura, no se toca nada del Sheet de RR).
@@ -382,11 +382,11 @@ async function revisar(){
     // Orden del Sheet 'activas' (Memo 2026-11-19): Analista,OS,Cuenta,Cliente,Cluster,Geocerca,Tipo,Subtipo,
     // Comentarios(I),Turno,Fecha agenda,Confirmacion (2026-11-20),Alerta,Antes,Ahora,Motivo,Tecnico,Fecha deteccion
     analista:c(f,0), os:c(f,1), cuenta:c(f,2), cliente:c(f,3), cluster:c(f,4), geocerca:c(f,5), tipo:c(f,6), subtipo:c(f,7),
-    turno:c(f,9), agenda:c(f,10), conf:c(f,11), alerta:c(f,12), antes:c(f,13), ahora:c(f,14), motivo:c(f,15), tecnico:c(f,16), fecha:c(f,17),
+    turno:c(f,9), agenda:c(f,10), conf:c(f,11), alerta:c(f,12), antes:c(f,13), ahora:c(f,14), motivo:c(f,15), tecnico:c(f,16), fecha:c(f,17), sono:c(f,18),
   })).filter(a => a.os);
-  // Llave = OS + fecha en que SONO. La etiqueta (Alerta) ahora es el ULTIMO
-  // movimiento y puede cambiar sin que la orden vuelva a sonar.
-  alertas.forEach(a => a.llave = `${a.os}|${a.fecha}`);
+  // Llave = OS + hora en que SONO (columna S). La etiqueta y la hora mostrada
+  // son del ULTIMO movimiento y cambian sin que la orden vuelva a sonar.
+  alertas.forEach(a => a.llave = `${a.os}|${a.sono}`);
   // Orden pedido por Memo (2026-11-20): la alerta mas reciente arriba, conforme
   // van saliendo (solo en la pagina; el Sheet sigue ordenado por agenda).
   alertas.sort((a,b) => b.fecha.localeCompare(a.fecha));
