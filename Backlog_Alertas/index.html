@@ -315,7 +315,8 @@ let alertas = [], recien = new Set();
 function pintar(){
   const cuenta = t => alertas.filter(a => a.alerta===t).length;
   document.getElementById('kTotal').textContent = alertas.length;
-  document.getElementById('kNueva').textContent = cuenta('ORDEN NUEVA');
+  // Las ORDEN NUEVA sin analista ya cuentan en 'En seguimiento (sin alerta)': no contarlas dos veces.
+  document.getElementById('kNueva').textContent = alertas.filter(a => a.alerta==='ORDEN NUEVA' && a.analista).length;
   document.getElementById('kDesasigno').textContent = cuenta('SE DESASIGNÓ');
   document.getElementById('kReagendada').textContent = cuenta('REAGENDADA');
   document.getElementById('kNoConf').textContent = cuenta('NO CONFIRMADA');
@@ -327,6 +328,7 @@ function pintar(){
   // turno todavia sin tecnico y 'EN SEGUIMIENTO'.
   const visibles = filtro==='TODAS' ? alertas
     : filtro==='SIN ANALISTA' ? alertas.filter(a => !a.analista)
+    : filtro==='ORDEN NUEVA' ? alertas.filter(a => a.alerta===filtro && a.analista)
     : alertas.filter(a => a.alerta===filtro);
   const lista = document.getElementById('lista');
   if(!visibles.length){
