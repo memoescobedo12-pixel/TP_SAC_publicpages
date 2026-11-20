@@ -383,12 +383,9 @@ async function revisar(){
     turno:c(f,9), agenda:c(f,10), conf:c(f,11), alerta:c(f,12), antes:c(f,13), ahora:c(f,14), motivo:c(f,15), tecnico:c(f,16), fecha:c(f,17),
   })).filter(a => a.os);
   alertas.forEach(a => a.llave = `${a.os}|${a.alerta}|${a.fecha}`);
-  // Orden pedido por Memo: agenda mas a futuro primero; misma fecha ->
-  // Matutino antes que Vespertino; empate -> alerta mas reciente primero.
-  const fechaNum = s => { const p = (s||'').split('/'); return p.length===3 ? (+p[2])*10000 + (+p[1])*100 + (+p[0]) || 0 : 0; };
-  const TURNO_ORDEN = {MATUTINO:0, VESPERTINO:1};
-  const turnoNum = s => TURNO_ORDEN[(s||'').trim().toUpperCase()] ?? 2;
-  alertas.sort((a,b) => (fechaNum(b.agenda) - fechaNum(a.agenda)) || (turnoNum(a.turno) - turnoNum(b.turno)) || b.fecha.localeCompare(a.fecha));
+  // Orden pedido por Memo (2026-11-20): la alerta mas reciente arriba, conforme
+  // van saliendo (solo en la pagina; el Sheet sigue ordenado por agenda).
+  alertas.sort((a,b) => b.fecha.localeCompare(a.fecha));
 
   const nuevas = alertas.filter(a => !vistos.has(a.llave));
   nuevas.forEach(a => vistos.add(a.llave));
