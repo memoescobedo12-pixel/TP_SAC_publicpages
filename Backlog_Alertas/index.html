@@ -75,6 +75,7 @@
 
   .badge{color:#fff;font-weight:700;font-size:12px;padding:8px 10px;border-radius:8px;text-align:center;letter-spacing:.3px;}
   .badge.nueva{background:var(--blue);} .badge.desasigno{background:var(--red);} .badge.reagendada{background:var(--yellow);color:var(--navy);}
+  .badge.cambio{background:var(--navy);} .card.cambio{border-left-color:var(--navy);}
   .badge.noconf{background:var(--purple);} .badge.detuvo{background:#92278F;} .badge.salio{background:var(--green);} .badge.seguimiento{background:var(--muted);}
   .sin-sonido{font-size:10px;color:var(--muted);text-align:center;margin-top:4px;font-weight:600;}
   .conf-no{display:inline-block;font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;margin-left:8px;background:var(--red);color:#fff;}
@@ -175,7 +176,7 @@
 
   <div class="lista" id="lista"></div>
 
-  <div class="link-sheet">Histórico completo (marcar Atendido / Comentario) → <a id="linkSheet" target="_blank">abrir Sheet</a></div>
+  <div class="link-sheet">Histórico completo (pestaña "historico": cada movimiento de cada orden) → <a id="linkSheet" target="_blank">abrir Sheet</a></div>
 
 </div>
 
@@ -192,11 +193,12 @@ const URL_SALUD = urlRango('1Pyl_vmwMjy7PXhz8NzoK6xfZwAhW0vCb_tbL1MZtqAE', "'est
 document.getElementById('linkSheet').href = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
 
 const INTERVALO_MS = 30000;
-const CLAVE_VISTOS = 'backlog_alertas_vistos_v1';
+const CLAVE_VISTOS = 'backlog_alertas_vistos_v2'; // v2: llave sin la etiqueta (2026-11-20)
 const MAX_NOTIF_INDIVIDUALES = 3; // si llegan mas de golpe, se manda una sola notificacion resumen
 
 const CLASE = {'ORDEN NUEVA':'nueva', 'SE DESASIGNÓ':'desasigno', 'REAGENDADA':'reagendada',
-  'NO CONFIRMADA':'noconf', 'SE DETUVO':'detuvo', 'SALIÓ DE DETENIDA':'salio', 'EN SEGUIMIENTO':'seguimiento'};
+  'NO CONFIRMADA':'noconf', 'SE DETUVO':'detuvo', 'SALIÓ DE DETENIDA':'salio', 'EN SEGUIMIENTO':'seguimiento',
+  'CAMBIO DE ESTADO':'cambio'};
 const TITULO_NOTIF = {'ORDEN NUEVA':'🆕 Orden nueva sin técnico', 'SE DESASIGNÓ':'↩️ Se desasignó una orden', 'REAGENDADA':'📅 Orden reagendada',
   'NO CONFIRMADA':'⛔ Orden NO confirmada', 'SE DETUVO':'⏸️ Orden detenida', 'SALIÓ DE DETENIDA':'▶️ Orden salió de detenida'};
 
@@ -382,7 +384,9 @@ async function revisar(){
     analista:c(f,0), os:c(f,1), cuenta:c(f,2), cliente:c(f,3), cluster:c(f,4), geocerca:c(f,5), tipo:c(f,6), subtipo:c(f,7),
     turno:c(f,9), agenda:c(f,10), conf:c(f,11), alerta:c(f,12), antes:c(f,13), ahora:c(f,14), motivo:c(f,15), tecnico:c(f,16), fecha:c(f,17),
   })).filter(a => a.os);
-  alertas.forEach(a => a.llave = `${a.os}|${a.alerta}|${a.fecha}`);
+  // Llave = OS + fecha en que SONO. La etiqueta (Alerta) ahora es el ULTIMO
+  // movimiento y puede cambiar sin que la orden vuelva a sonar.
+  alertas.forEach(a => a.llave = `${a.os}|${a.fecha}`);
   // Orden pedido por Memo (2026-11-20): la alerta mas reciente arriba, conforme
   // van saliendo (solo en la pagina; el Sheet sigue ordenado por agenda).
   alertas.sort((a,b) => b.fecha.localeCompare(a.fecha));
